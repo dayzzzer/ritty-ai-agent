@@ -19,23 +19,30 @@ export const ritualPfpCommand: BotCommand = {
       },
     ];
 
-    try {
-      await ctx.reply({
-        content,
-        files: [
-          {
-            attachment: generated.buffer,
-            name: `ritty-pfp-${Date.now()}.jpg`,
-          },
-        ],
-        embeds,
-      });
-    } catch (error) {
-      logger.warn({ err: error }, 'Failed to send generated PFP attachment in /ritualpfp');
-      await ctx.reply({
-        content: `${content}\n\nImage upload failed due a temporary Discord connection issue. Please retry.`,
-        embeds,
-      });
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        await ctx.reply({
+          content,
+          files: [
+            {
+              attachment: generated.buffer,
+              name: `ritty-pfp-${Date.now()}.jpg`,
+            },
+          ],
+          embeds,
+        });
+        return;
+      } catch (error) {
+        logger.warn({ err: error, attempt }, 'Failed to send generated PFP attachment in /ritualpfp');
+        if (attempt < 3) {
+          await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+        }
+      }
     }
+
+    await ctx.reply({
+      content: `${content}\n\nImage upload failed due a temporary Discord connection issue. Please retry.`,
+      embeds,
+    });
   },
 };
