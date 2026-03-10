@@ -182,6 +182,7 @@ export class SiggyRpgService {
   private loaded = false;
   private persistChain: Promise<void> = Promise.resolve();
   private readonly duelChallenges = new Map<string, DuelChallenge>();
+  private readonly legacyStatePath = path.resolve('./storage/siggy_rpg_state.json');
 
   constructor(
     private readonly statePath: string,
@@ -208,6 +209,25 @@ export class SiggyRpgService {
         'SiggyRpg state loaded',
       );
     } catch {
+      if (this.statePath !== this.legacyStatePath) {
+        try {
+          const rawLegacy = await readFile(this.legacyStatePath, 'utf8');
+          const parsedLegacy = JSON.parse(rawLegacy) as Partial<SiggyRpgState>;
+          this.state = {
+            profiles: parsedLegacy.profiles ?? {},
+          };
+          logger.warn(
+            { statePath: this.statePath, legacyStatePath: this.legacyStatePath, profiles: this.profilesCount() },
+            'Primary SiggyRpg state missing, loaded legacy state and migrating to primary path',
+          );
+          await this.persist();
+          this.loaded = true;
+          return;
+        } catch {
+          // Ignore legacy migration errors and continue with empty state.
+        }
+      }
+
       this.state = { profiles: {} };
       logger.warn({ statePath: this.statePath }, 'SiggyRpg state file missing or invalid, starting empty');
     }

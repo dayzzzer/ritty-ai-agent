@@ -47,3 +47,9 @@ services:
         value: "!"
       - key: ENABLE_DOCS_CRON
         value: "false"
+      - key: SIGGY_RPG_STATE_PATH
+        value: /var/data/siggy_rpg_state.json
+    disk:
+      name: siggy-rpg-data
+      mountPath: /var/data
+      sizeGB: 1
