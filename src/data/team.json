@@ -1,9 +1,58 @@
 [
   {
-    "id": "placeholder-core-1",
-    "name": "Ritual Team Member",
-    "role": "Core Contributor",
-    "description": "Builds and ships core protocol and ecosystem tooling.",
-    "twitter": "https://x.com/ritualnet"
+    "id": "team-josh",
+    "name": "Josh",
+    "role": "Team",
+    "description": "Core Ritual team member.",
+    "twitter": "https://x.com/joshsimenhoff"
+  },
+  {
+    "id": "team-val",
+    "name": "Val",
+    "role": "Team",
+    "description": "Core Ritual team member.",
+    "twitter": "https://x.com/BunsDev"
+  },
+  {
+    "id": "team-wally",
+    "name": "Wally",
+    "role": "Team",
+    "description": "Core Ritual team member.",
+    "twitter": "https://x.com/0x_HalfMoonKid"
+  },
+  {
+    "id": "mod-dunken-96",
+    "name": "dunken_96",
+    "role": "Mod",
+    "description": "Ritual community moderator.",
+    "twitter": "https://x.com/dunken9718"
+  },
+  {
+    "id": "mod-jez5728",
+    "name": "jez5728",
+    "role": "Mod",
+    "description": "Ritual community moderator.",
+    "twitter": "https://x.com/Jez_Cryptoz"
+  },
+  {
+    "id": "mod-stefan-1",
+    "name": "stefan_1",
+    "role": "Mod",
+    "description": "Ritual community moderator.",
+    "twitter": "http://x.com/0xMadScientist"
+  },
+  {
+    "id": "mod-majorproject8",
+    "name": "majorproject8",
+    "role": "Mod",
+    "description": "Ritual community moderator.",
+    "twitter": "https://x.com/Majorproject5"
+  },
+  {
+    "id": "mod-flashme",
+    "name": "flashme",
+    "role": "Mod",
+    "description": "Ritual community moderator.",
+    "twitter": "https://x.com/cryptooflashh"
   }
 ]
