@@ -224,13 +224,20 @@ export class SiggyRpgService {
     const tmpPath = `${this.statePath}.tmp`;
 
     this.persistChain = this.persistChain.then(async () => {
-      await mkdir(dir, { recursive: true });
-      await writeFile(tmpPath, payload, 'utf8');
-      await rename(tmpPath, this.statePath);
-      logger.info(
-        { statePath: this.statePath, profiles: this.profilesCount() },
-        'SiggyRpg state persisted',
-      );
+      try {
+        await mkdir(dir, { recursive: true });
+        await writeFile(tmpPath, payload, 'utf8');
+        await rename(tmpPath, this.statePath);
+        logger.info(
+          { statePath: this.statePath, profiles: this.profilesCount() },
+          'SiggyRpg state persisted',
+        );
+      } catch (error) {
+        logger.error(
+          { err: error, statePath: this.statePath },
+          'SiggyRpg persist failed; continuing with in-memory state',
+        );
+      }
     });
 
     await this.persistChain;

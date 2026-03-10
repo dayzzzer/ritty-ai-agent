@@ -8,20 +8,22 @@ export const newsiggyCommand: BotCommand = {
   aliases: ['newsiggy'],
   async execute(ctx) {
     const result = await ctx.services.siggyRpgService.createSiggy(ctx.userId, ctx.username);
-    await ctx.reply({
-      content: result.created
-        ? 'Your Siggy has been created.'
-        : 'You already have a Siggy. Showing your current profile.',
-      embeds: [buildSiggyCardEmbed(result.card)],
-    });
+    const content = result.created
+      ? 'Your Siggy has been created.'
+      : 'You already have a Siggy. Showing your current profile.';
 
     try {
       const image = await buildImageAttachmentFromPath(result.card.imagePath);
-      await ctx.followUp({
+      await ctx.reply({
+        content,
+        embeds: [buildSiggyCardEmbed(result.card)],
         files: [{ attachment: image.buffer, name: image.name }],
       });
     } catch {
-      // Keep command successful even if Discord attachment upload fails.
+      await ctx.reply({
+        content,
+        embeds: [buildSiggyCardEmbed(result.card)],
+      });
     }
   },
 };

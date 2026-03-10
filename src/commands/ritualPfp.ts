@@ -10,27 +10,30 @@ export const ritualPfpCommand: BotCommand = {
 
     const traits = generated.selected.map((entry) => `• ${entry.layer}: ${entry.name}`).join('\n');
 
-    await ctx.reply({
-      content: localize(ctx.locale, 'Твой случайный Ritual PFP готов.', 'Your random Ritual PFP is ready.'),
-      embeds: [
-        {
-          title: localize(ctx.locale, 'Выбранные трейты', 'Selected Traits'),
-          description: traits || localize(ctx.locale, 'Нет выбранных трейтов', 'No traits selected'),
-        },
-      ],
-    });
+    const content = localize(ctx.locale, 'Твой случайный Ritual PFP готов.', 'Your random Ritual PFP is ready.');
+    const embeds = [
+      {
+        title: localize(ctx.locale, 'Выбранные трейты', 'Selected Traits'),
+        description: traits || localize(ctx.locale, 'Нет выбранных трейтов', 'No traits selected'),
+      },
+    ];
 
     try {
-      await ctx.followUp({
+      await ctx.reply({
+        content,
         files: [
           {
             attachment: generated.buffer,
             name: `ritty-pfp-${Date.now()}.jpg`,
           },
         ],
+        embeds,
       });
     } catch {
-      // Keep command successful even if Discord attachment upload fails.
+      await ctx.reply({
+        content,
+        embeds,
+      });
     }
   },
 };
