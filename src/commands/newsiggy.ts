@@ -8,7 +8,7 @@ export const newsiggyCommand: BotCommand = {
   name: 'newsiggy',
   description: 'Create your base Common Siggy',
   aliases: ['newsiggy'],
-  deferReply: false,
+  deferReply: true,
   async execute(ctx) {
     const result = await ctx.services.siggyRpgService.createSiggy(ctx.userId, ctx.username);
     const content = result.created

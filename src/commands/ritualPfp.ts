@@ -7,7 +7,7 @@ export const ritualPfpCommand: BotCommand = {
   name: 'ritualpfp',
   description: 'Generate a random Ritual profile picture',
   aliases: ['ritualpfp'],
-  deferReply: false,
+  deferReply: true,
   async execute(ctx) {
     if (appConfig.mediaBaseUrl) {
       try {

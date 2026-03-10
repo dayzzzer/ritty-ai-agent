@@ -26,6 +26,8 @@ import { handleDuelButtonInteraction } from './commands/rittyDuel.js';
 import { buildFileAttachmentFromPath, buildImageAttachmentFromPath } from './utils/imageAttachment.js';
 import { detectRittyActionFromText, type RittyAction } from './actions/rittyActions.js';
 
+const DISCORD_READY_TIMEOUT_MS = 45_000;
+
 const GREETING_WORDS = new Set([
   'hi',
   'hello',
@@ -224,6 +226,50 @@ function extractSlashArgs(interaction: ChatInputCommandInteraction, command: Bot
   }
 
   return args;
+}
+
+async function waitForClientReady(client: Client, timeoutMs = DISCORD_READY_TIMEOUT_MS): Promise<void> {
+  if (client.isReady()) {
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      client.off(Events.ClientReady, onReady);
+      client.off(Events.Error, onError);
+      reject(new Error(`Discord client did not reach ready state within ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    const onReady = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      client.off(Events.ClientReady, onReady);
+      client.off(Events.Error, onError);
+      resolve();
+    };
+
+    const onError = (error: Error) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeout);
+      client.off(Events.ClientReady, onReady);
+      client.off(Events.Error, onError);
+      reject(error);
+    };
+
+    client.on(Events.ClientReady, onReady);
+    client.on(Events.Error, onError);
+  });
 }
 
 async function executeSlashCommand(
@@ -469,6 +515,13 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
     }
   });
 
-  await client.login(appConfig.discord.token);
+  try {
+    await client.login(appConfig.discord.token);
+    await waitForClientReady(client);
+  } catch (error) {
+    client.destroy();
+    throw error;
+  }
+
   return client;
 }
