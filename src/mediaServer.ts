@@ -1,4 +1,4 @@
-import { createServer } from 'node:http';
+import { createServer, type ServerResponse } from 'node:http';
 import { extname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
@@ -9,18 +9,36 @@ import { PfpService } from './services/pfpService.js';
 
 loadEnv();
 
+interface ArtworkItem {
+  title?: string;
+  author: string;
+  src: string;
+  twitter?: string;
+}
+
 interface CachedPfp {
   buffer: Buffer;
   selected: Array<{ layer: string; id: string; name: string }>;
   createdAt: number;
 }
 
+interface CachedArt {
+  buffer: Buffer;
+  contentType: string;
+  item: ArtworkItem;
+  createdAt: number;
+}
+
 const pfpAssetsRoot = path.resolve(process.env.PFP_ASSETS_ROOT ?? './assets/characters');
 const mediaPublicBaseUrl = process.env.MEDIA_PUBLIC_BASE_URL;
+const artsApiUrl = process.env.ARTS_API_URL ?? 'https://ritualarts.xyz/api/arts';
 
 const pfpService = new PfpService(pfpAssetsRoot);
 const pfpCache = new Map<string, CachedPfp>();
-const CACHE_TTL_MS = 10 * 60 * 1000;
+const artCache = new Map<string, CachedArt>();
+const IMAGE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+let artworksCache: ArtworkItem[] = [];
+let artworksCacheFetchedAt = 0;
 
 const siggyImageByRarity: Record<string, string> = {
   common: path.resolve(process.env.SIGGY_COMMON_IMAGE_PATH ?? './files by user/common/common.png'),
@@ -50,8 +68,13 @@ function getMimeByPath(filePath: string): string {
 function cleanupCache(): void {
   const now = Date.now();
   for (const [id, item] of pfpCache.entries()) {
-    if (now - item.createdAt > CACHE_TTL_MS) {
+    if (now - item.createdAt > IMAGE_CACHE_TTL_MS) {
       pfpCache.delete(id);
+    }
+  }
+  for (const [id, item] of artCache.entries()) {
+    if (now - item.createdAt > IMAGE_CACHE_TTL_MS) {
+      artCache.delete(id);
     }
   }
 }
@@ -76,6 +99,49 @@ function resolveBaseUrl(hostHeader: string | undefined): string | null {
   return `https://${hostHeader}`;
 }
 
+function writeBinaryResponse(
+  method: string,
+  res: ServerResponse,
+  status: number,
+  headers: Record<string, string>,
+  body: Buffer,
+): void {
+  res.writeHead(status, headers);
+  if (method === 'HEAD') {
+    res.end();
+    return;
+  }
+  res.end(body);
+}
+
+function pickRandom<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+async function getArtworks(): Promise<ArtworkItem[]> {
+  const now = Date.now();
+  if (artworksCache.length > 0 && now - artworksCacheFetchedAt < 60_000) {
+    return artworksCache;
+  }
+
+  const response = await fetch(artsApiUrl, {
+    headers: { accept: 'application/json' },
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch artworks: HTTP ${response.status}`);
+  }
+
+  const payload = (await response.json()) as { items?: ArtworkItem[] };
+  const items = (payload.items ?? []).filter((item) => item?.src && item?.author);
+  if (items.length === 0) {
+    throw new Error('No artworks returned by API.');
+  }
+
+  artworksCache = items;
+  artworksCacheFetchedAt = now;
+  return artworksCache;
+}
+
 const server = createServer(async (req, res) => {
   try {
     const method = req.method ?? 'GET';
@@ -89,7 +155,7 @@ const server = createServer(async (req, res) => {
       return;
     }
 
-    if (method === 'GET' && pathname.startsWith('/media/siggy/')) {
+    if ((method === 'GET' || method === 'HEAD') && pathname.startsWith('/media/siggy/')) {
       const rarity = pathname.slice('/media/siggy/'.length).toLowerCase();
       const imagePath = siggyImageByRarity[rarity];
       if (!imagePath) {
@@ -100,11 +166,16 @@ const server = createServer(async (req, res) => {
       }
 
       const image = await readFile(imagePath);
-      res.writeHead(200, {
-        'content-type': getMimeByPath(imagePath),
-        'cache-control': 'public, max-age=3600',
-      });
-      res.end(image);
+      writeBinaryResponse(
+        method,
+        res,
+        200,
+        {
+          'content-type': getMimeByPath(imagePath),
+          'cache-control': 'public, max-age=3600',
+        },
+        image,
+      );
       return;
     }
 
@@ -134,7 +205,7 @@ const server = createServer(async (req, res) => {
       return;
     }
 
-    if (method === 'GET' && pathname.startsWith('/media/pfp/')) {
+    if ((method === 'GET' || method === 'HEAD') && pathname.startsWith('/media/pfp/')) {
       const id = pathname.slice('/media/pfp/'.length).replace(/\.jpg$/i, '');
       const item = pfpCache.get(id);
       if (!item) {
@@ -144,11 +215,79 @@ const server = createServer(async (req, res) => {
         return;
       }
 
-      res.writeHead(200, {
-        'content-type': 'image/jpeg',
-        'cache-control': 'public, max-age=300',
+      writeBinaryResponse(
+        method,
+        res,
+        200,
+        {
+          'content-type': 'image/jpeg',
+          'cache-control': 'public, max-age=86400, immutable',
+        },
+        item.buffer,
+      );
+      return;
+    }
+
+    if (method === 'GET' && pathname === '/api/art/random') {
+      const baseUrl = resolveBaseUrl(req.headers.host);
+      if (!baseUrl) {
+        const out = jsonResponse({ error: 'Missing host header' }, 500);
+        res.writeHead(out.status, { 'content-type': out.contentType });
+        res.end(out.body);
+        return;
+      }
+
+      const artworks = await getArtworks();
+      const selected = pickRandom(artworks);
+      const imageResponse = await fetch(selected.src, {
+        headers: { accept: 'image/*,*/*;q=0.8' },
       });
-      res.end(item.buffer);
+      if (!imageResponse.ok) {
+        throw new Error(`Failed to fetch artwork image: HTTP ${imageResponse.status}`);
+      }
+
+      const contentType = imageResponse.headers.get('content-type')?.split(';')[0] || 'image/jpeg';
+      const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+      const id = randomUUID();
+      artCache.set(id, {
+        buffer: imageBuffer,
+        contentType,
+        item: selected,
+        createdAt: Date.now(),
+      });
+
+      const out = jsonResponse({
+        title: selected.title || 'Untitled',
+        author: selected.author,
+        twitter: selected.twitter || 'https://x.com/',
+        source: 'ritualarts.xyz',
+        imageUrl: `${baseUrl}/media/art/${id}.jpg`,
+      });
+      res.writeHead(out.status, { 'content-type': out.contentType, 'cache-control': 'no-store' });
+      res.end(out.body);
+      return;
+    }
+
+    if ((method === 'GET' || method === 'HEAD') && pathname.startsWith('/media/art/')) {
+      const id = pathname.slice('/media/art/'.length).replace(/\.jpg$/i, '');
+      const item = artCache.get(id);
+      if (!item) {
+        const out = jsonResponse({ error: 'Not found' }, 404);
+        res.writeHead(out.status, { 'content-type': out.contentType });
+        res.end(out.body);
+        return;
+      }
+
+      writeBinaryResponse(
+        method,
+        res,
+        200,
+        {
+          'content-type': item.contentType,
+          'cache-control': 'public, max-age=86400, immutable',
+        },
+        item.buffer,
+      );
       return;
     }
 
