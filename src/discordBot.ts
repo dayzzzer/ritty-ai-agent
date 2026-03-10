@@ -26,8 +26,7 @@ import { handleDuelButtonInteraction } from './commands/rittyDuel.js';
 import { buildFileAttachmentFromPath, buildImageAttachmentFromPath } from './utils/imageAttachment.js';
 import { detectRittyActionFromText, type RittyAction } from './actions/rittyActions.js';
 
-const DISCORD_READY_TIMEOUT_MS = 45_000;
-const DISCORD_PREFLIGHT_TIMEOUT_MS = 15_000;
+const DISCORD_READY_TIMEOUT_MS = 120_000;
 
 const GREETING_WORDS = new Set([
   'hi',
@@ -273,50 +272,6 @@ async function waitForClientReady(client: Client, timeoutMs = DISCORD_READY_TIME
   });
 }
 
-async function runDiscordGatewayPreflight(token: string): Promise<void> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), DISCORD_PREFLIGHT_TIMEOUT_MS);
-
-  try {
-    const response = await fetch('https://discord.com/api/v10/gateway/bot', {
-      method: 'GET',
-      headers: {
-        Authorization: `Bot ${token}`,
-      },
-      signal: controller.signal,
-    });
-
-    if (response.status === 401) {
-      throw new Error('Discord token was rejected by API (401 Unauthorized). Rotate token and update DISCORD_TOKEN.');
-    }
-
-    if (!response.ok) {
-      throw new Error(`Discord gateway preflight failed with status ${response.status}.`);
-    }
-
-    const payload = (await response.json()) as {
-      shards?: number;
-      session_start_limit?: { remaining?: number; total?: number };
-    };
-
-    logger.info(
-      {
-        shards: payload.shards,
-        sessionStartRemaining: payload.session_start_limit?.remaining,
-        sessionStartTotal: payload.session_start_limit?.total,
-      },
-      'Discord gateway preflight passed',
-    );
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`Discord gateway preflight timed out after ${DISCORD_PREFLIGHT_TIMEOUT_MS}ms`);
-    }
-    throw error;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 async function executeSlashCommand(
   interaction: ChatInputCommandInteraction,
   command: BotCommand,
@@ -404,8 +359,6 @@ export async function registerSlashCommands(): Promise<void> {
 }
 
 export async function startDiscordBot(services: BotServices): Promise<Client> {
-  await runDiscordGatewayPreflight(appConfig.discord.token);
-
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,

@@ -5,6 +5,10 @@ import { startDiscordBot } from './discordBot.js';
 import { ingestRitualDocs } from './ai/ingest.js';
 import { startWebServer } from './web/server.js';
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function scheduleDocsReindex(services: BotServices): void {
   if (!appConfig.docsCron.enabled) {
     return;
@@ -48,13 +52,30 @@ function scheduleDocsReindex(services: BotServices): void {
   void runIfNeeded();
 }
 
+async function startDiscordWithRetry(services: BotServices): Promise<void> {
+  let attempt = 0;
+
+  while (true) {
+    attempt += 1;
+    try {
+      await startDiscordBot(services);
+      logger.info({ attempt }, 'Discord bot startup completed');
+      return;
+    } catch (error) {
+      const retryInMs = Math.min(120_000, 15_000 * attempt);
+      logger.error({ err: error, attempt, retryInMs }, 'Discord startup failed, retrying');
+      await sleep(retryInMs);
+    }
+  }
+}
+
 async function main(): Promise<void> {
   const services = new BotServices();
   await services.loadDocsIndex();
 
   startWebServer(services);
   scheduleDocsReindex(services);
-  await startDiscordBot(services);
+  await startDiscordWithRetry(services);
 }
 
 main().catch((error) => {
