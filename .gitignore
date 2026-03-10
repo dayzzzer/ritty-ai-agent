@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+storage/*.json
+*.log
+.DS_Store
+public
+.vercel

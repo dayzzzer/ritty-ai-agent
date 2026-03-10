@@ -1,0 +1,435 @@
+{
+  "canvas": {
+    "width": 2000,
+    "height": 2000
+  },
+  "order": [
+    "background",
+    "body",
+    "item",
+    "extraItem",
+    "effect"
+  ],
+  "layers": {
+    "background": [
+      {
+        "id": "bg_01",
+        "name": "IMG 9368",
+        "file": "/assets/characters/background/IMG_9368.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9368.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_02",
+        "name": "IMG 9369",
+        "file": "/assets/characters/background/IMG_9369.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9369.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_03",
+        "name": "IMG 9370",
+        "file": "/assets/characters/background/IMG_9370.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9370.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_04",
+        "name": "IMG 9371",
+        "file": "/assets/characters/background/IMG_9371.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9371.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_05",
+        "name": "IMG 9372",
+        "file": "/assets/characters/background/IMG_9372.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9372.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_06",
+        "name": "IMG 9373",
+        "file": "/assets/characters/background/IMG_9373.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9373.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_07",
+        "name": "IMG 9374",
+        "file": "/assets/characters/background/IMG_9374.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9374.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_08",
+        "name": "IMG 9375",
+        "file": "/assets/characters/background/IMG_9375.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9375.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_09",
+        "name": "IMG 9376",
+        "file": "/assets/characters/background/IMG_9376.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9376.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_10",
+        "name": "IMG 9377",
+        "file": "/assets/characters/background/IMG_9377.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9377.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_11",
+        "name": "IMG 9378",
+        "file": "/assets/characters/background/IMG_9378.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9378.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_12",
+        "name": "IMG 9379",
+        "file": "/assets/characters/background/IMG_9379.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9379.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_13",
+        "name": "IMG 9380",
+        "file": "/assets/characters/background/IMG_9380.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9380.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_14",
+        "name": "IMG 9381",
+        "file": "/assets/characters/background/IMG_9381.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9381.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_15",
+        "name": "IMG 9382",
+        "file": "/assets/characters/background/IMG_9382.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9382.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_16",
+        "name": "IMG 9383",
+        "file": "/assets/characters/background/IMG_9383.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9383.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_17",
+        "name": "IMG 9384",
+        "file": "/assets/characters/background/IMG_9384.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9384.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_18",
+        "name": "IMG 9385",
+        "file": "/assets/characters/background/IMG_9385.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9385.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_19",
+        "name": "IMG 9386",
+        "file": "/assets/characters/background/IMG_9386.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9386.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_20",
+        "name": "IMG 9387",
+        "file": "/assets/characters/background/IMG_9387.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9387.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_21",
+        "name": "IMG 9388",
+        "file": "/assets/characters/background/IMG_9388.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9388.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_22",
+        "name": "IMG 9389",
+        "file": "/assets/characters/background/IMG_9389.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9389.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_23",
+        "name": "IMG 9391",
+        "file": "/assets/characters/background/IMG_9391.JPG",
+        "thumbnail": "/assets/characters/background/IMG_9391.JPG",
+        "rarity": "Common"
+      },
+      {
+        "id": "bg_24",
+        "name": "AQAKQlgQjFj 7RJ6rxJEPaMAfkRFETr snihPpJZKlz7txXbxVZRtyYkJAVrZ4GARxXxUgspQb0bmHlRIzxwvuHMR1E",
+        "file": "/assets/characters/background/AQAKQlgQjFj-7RJ6rxJEPaMAfkRFETr-snihPpJZKlz7txXbxVZRtyYkJAVrZ4GARxXxUgspQb0bmHlRIzxwvuHMR1E.png",
+        "thumbnail": "/assets/characters/background/AQAKQlgQjFj-7RJ6rxJEPaMAfkRFETr-snihPpJZKlz7txXbxVZRtyYkJAVrZ4GARxXxUgspQb0bmHlRIzxwvuHMR1E.png",
+        "rarity": "Common"
+      }
+    ],
+    "body": [
+      {
+        "id": "body_01",
+        "name": "кот 1",
+        "file": "/assets/characters/body/кот 1.png",
+        "thumbnail": "/assets/characters/body/кот 1.png",
+        "rarity": "Common"
+      },
+      {
+        "id": "body_02",
+        "name": "кот 2",
+        "file": "/assets/characters/body/кот 2.png",
+        "thumbnail": "/assets/characters/body/кот 2.png",
+        "rarity": "Common"
+      },
+      {
+        "id": "body_03",
+        "name": "кот 3",
+        "file": "/assets/characters/body/кот 3.png",
+        "thumbnail": "/assets/characters/body/кот 3.png",
+        "rarity": "Common"
+      },
+      {
+        "id": "body_04",
+        "name": "кот 4",
+        "file": "/assets/characters/body/кот 4.png",
+        "thumbnail": "/assets/characters/body/кот 4.png",
+        "rarity": "Common"
+      },
+      {
+        "id": "body_05",
+        "name": "кот 5",
+        "file": "/assets/characters/body/кот 5.png",
+        "thumbnail": "/assets/characters/body/кот 5.png",
+        "rarity": "Common"
+      },
+      {
+        "id": "body_06",
+        "name": "кот 6",
+        "file": "/assets/characters/body/кот 6.png",
+        "thumbnail": "/assets/characters/body/кот 6.png",
+        "rarity": "Common"
+      },
+      {
+        "id": "body_07",
+        "name": "кот",
+        "file": "/assets/characters/body/кот.png",
+        "thumbnail": "/assets/characters/body/кот.png",
+        "rarity": "Common"
+      }
+    ],
+    "item": [
+      {
+        "id": "item_01",
+        "name": "IMG 9420",
+        "file": "/assets/characters/item/IMG_9420.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9420.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_02",
+        "name": "IMG 9423",
+        "file": "/assets/characters/item/IMG_9423.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9423.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_03",
+        "name": "IMG 9424",
+        "file": "/assets/characters/item/IMG_9424.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9424.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_04",
+        "name": "IMG 9425",
+        "file": "/assets/characters/item/IMG_9425.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9425.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_05",
+        "name": "IMG 9426",
+        "file": "/assets/characters/item/IMG_9426.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9426.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_06",
+        "name": "IMG 9427",
+        "file": "/assets/characters/item/IMG_9427.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9427.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_07",
+        "name": "IMG 9429",
+        "file": "/assets/characters/item/IMG_9429.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9429.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_08",
+        "name": "IMG 9432",
+        "file": "/assets/characters/item/IMG_9432.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9432.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_09",
+        "name": "IMG 9434",
+        "file": "/assets/characters/item/IMG_9434.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9434.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_10",
+        "name": "IMG 9435",
+        "file": "/assets/characters/item/IMG_9435.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9435.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_11",
+        "name": "IMG 9436",
+        "file": "/assets/characters/item/IMG_9436.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9436.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_12",
+        "name": "IMG 9437",
+        "file": "/assets/characters/item/IMG_9437.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9437.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "item_13",
+        "name": "IMG 9438",
+        "file": "/assets/characters/item/IMG_9438.PNG",
+        "thumbnail": "/assets/characters/item/IMG_9438.PNG",
+        "rarity": "Common"
+      }
+    ],
+    "extraItem": [
+      {
+        "id": "extra_01",
+        "name": "IMG 9421",
+        "file": "/assets/characters/extra-item/IMG_9421.PNG",
+        "thumbnail": "/assets/characters/extra-item/IMG_9421.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "extra_02",
+        "name": "IMG 9422",
+        "file": "/assets/characters/extra-item/IMG_9422.PNG",
+        "thumbnail": "/assets/characters/extra-item/IMG_9422.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "extra_03",
+        "name": "IMG 9428",
+        "file": "/assets/characters/extra-item/IMG_9428.PNG",
+        "thumbnail": "/assets/characters/extra-item/IMG_9428.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "extra_04",
+        "name": "IMG 9430",
+        "file": "/assets/characters/extra-item/IMG_9430.PNG",
+        "thumbnail": "/assets/characters/extra-item/IMG_9430.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "extra_05",
+        "name": "IMG 9431",
+        "file": "/assets/characters/extra-item/IMG_9431.PNG",
+        "thumbnail": "/assets/characters/extra-item/IMG_9431.PNG",
+        "rarity": "Common"
+      },
+      {
+        "id": "extra_06",
+        "name": "IMG 9433",
+        "file": "/assets/characters/extra-item/IMG_9433.PNG",
+        "thumbnail": "/assets/characters/extra-item/IMG_9433.PNG",
+        "rarity": "Common"
+      }
+    ],
+    "effect": [
+      {
+        "id": "effect_01",
+        "name": "Glitch RGB",
+        "effectPreset": "glitch-rgb",
+        "rarity": "Rare"
+      },
+      {
+        "id": "effect_02",
+        "name": "Mono Noir",
+        "effectPreset": "mono-noir",
+        "rarity": "Common"
+      },
+      {
+        "id": "effect_03",
+        "name": "VHS Noise",
+        "effectPreset": "vhs-noise",
+        "rarity": "Rare"
+      },
+      {
+        "id": "effect_04",
+        "name": "Dream Bloom",
+        "effectPreset": "dream-bloom",
+        "rarity": "Epic"
+      },
+      {
+        "id": "effect_05",
+        "name": "Chaos Split",
+        "effectPreset": "chaos-split",
+        "rarity": "Rare"
+      },
+      {
+        "id": "effect_06",
+        "name": "Toxic Green",
+        "effectPreset": "toxic-green",
+        "rarity": "Uncommon"
+      },
+      {
+        "id": "effect_07",
+        "name": "Frost Cyan",
+        "effectPreset": "frost-cyan",
+        "rarity": "Uncommon"
+      },
+      {
+        "id": "effect_08",
+        "name": "Solar Burn",
+        "effectPreset": "solar-burn",
+        "rarity": "Epic"
+      },
+      {
+        "id": "effect_09",
+        "name": "Ghost Invert",
+        "effectPreset": "ghost-invert",
+        "rarity": "Epic"
+      },
+      {
+        "id": "effect_10",
+        "name": "Posterize Pop",
+        "effectPreset": "posterize-pop",
+        "rarity": "Rare"
+      }
+    ]
+  }
+}

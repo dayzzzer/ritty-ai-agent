@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RITTY AI | Workspace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    @view-transition { navigation: auto; }
+    :root {
+      --accent: #88f5d1;
+      --accent-2: #52b3ff;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #05070d;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .glass-panel {
+      background: linear-gradient(160deg, rgba(15, 21, 35, 0.8) 0%, rgba(10, 16, 29, 0.9) 70%, rgba(9, 19, 34, 1) 100%);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(40, 50, 74, 0.5);
+    }
+    .video-stack {
+      position: relative;
+      flex: 1;
+      min-height: 200px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    .video-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #02040a;
+    }
+    .reaction-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(136, 245, 209, 0.16) 0%, rgba(82, 179, 255, 0.08) 40%, transparent 75%);
+      animation: pulse 0.9s ease-in-out;
+      pointer-events: none;
+    }
+    @keyframes pulse { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(40, 50, 74, 1);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="overflow-hidden">
+  <div class="h-screen w-full flex p-4 gap-4 bg-[radial-gradient(circle_at_10%_10%,#0f1830_0%,#070b14_45%,#04060b_100%)]">
+    
+    <!-- Left Navigation / Character Panel -->
+    <aside id="visualPanel" class="w-80 flex-shrink-0 flex flex-col gap-4">
+      <!-- Branding & User -->
+      <div class="glass-panel rounded-2xl p-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-400 flex items-center justify-center text-slate-950">
+            <iconify-icon icon="lucide:terminal" class="text-xl font-bold"></iconify-icon>
+          </div>
+          <h1 class="font-display text-lg font-bold tracking-tight text-white">SIGGY</h1>
+        </div>
+        <div class="flex gap-2">
+          <button class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors" id="nav-settings-btn">
+            <iconify-icon icon="lucide:settings-2" class="text-xl"></iconify-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Character Monitor -->
+      <div class="glass-panel rounded-2xl overflow-hidden flex flex-col flex-1">
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-widest text-emerald-400 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Live Core
+          </span>
+          <span class="text-xs text-slate-500 font-mono">STABLE</span>
+        </div>
+        
+        <div class="flex-1 p-2">
+          <div class="video-stack bg-black shadow-inner">
+            <video id="idleVideo" class="video-layer" autoplay muted loop playsinline>
+              <source src="/media/idle" type="video/mp4" />
+            </video>
+            <video id="reactionVideo" class="video-layer hidden" muted playsinline preload="auto">
+              <source src="/media/reaction" type="video/mp4" />
+            </video>
+            <div class="reaction-overlay hidden" id="reactionOverlay"></div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-slate-900/50">
+          <div class="grid grid-cols-2 gap-2">
+             <div class="p-3 rounded-xl bg-slate-950/50 border border-slate-800">
+               <p class="text-[10px] text-slate-500 mb-1">LATENCY</p>
+               <p class="text-sm font-mono text-emerald-400">24ms</p>
+             </div>
+             <div class="p-3 rounded-xl bg-slate-950/50 border border-slate-800">
+               <p class="text-[10px] text-slate-500 mb-1">TOKEN RATE</p>
+               <p class="text-sm font-mono text-emerald-400">142/s</p>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Session Info -->
+      <div class="glass-panel rounded-2xl p-4 flex flex-col gap-3">
+        <div class="flex items-center gap-3">
+          <iconify-icon icon="lucide:history" class="text-slate-400"></iconify-icon>
+          <span class="text-sm font-medium text-slate-300">Active Sessions</span>
+        </div>
+        <div class="space-y-1">
+          <a href="#" id="session-1-link" class="block px-3 py-2 rounded-lg bg-emerald-400/10 text-emerald-400 text-xs border border-emerald-400/20">Current Workflow</a>
+          <a href="#" id="session-2-link" class="block px-3 py-2 rounded-lg hover:bg-slate-800/50 text-slate-500 text-xs transition-colors">Ritual Integration Docs</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Command Interface -->
+    <main class="chat-panel flex-1 flex flex-col glass-panel rounded-3xl overflow-hidden relative">
+      <!-- Header -->
+      <header class="h-16 border-b border-slate-800 px-6 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div>
+            <h2 class="text-sm font-bold text-white">RITTY AI COMMAND CENTER</h2>
+            <p class="text-[10px] text-slate-500 uppercase tracking-[0.2em]">Enterprise Web Core V2.4</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-[10px] font-mono text-slate-400">
+            DISCORD: <span class="text-emerald-400">CONNECTED</span>
+          </div>
+          <iconify-icon icon="lucide:search" class="text-slate-500 cursor-pointer hover:text-white transition-colors"></iconify-icon>
+        </div>
+      </header>
+
+      <!-- Rapid Command Palette -->
+      <section id="commandRow" class="p-3 border-b border-slate-800/50 flex gap-2 overflow-x-auto custom-scrollbar whitespace-nowrap bg-slate-900/20">
+        <button data-command="/askritty What is Ritual?" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 hover:border-emerald-400/50 hover:text-white transition-all">
+          <iconify-icon icon="lucide:help-circle" class="text-emerald-400"></iconify-icon>
+          /askritty
+        </button>
+        <button data-command="/artritual" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 hover:border-emerald-400/50 hover:text-white transition-all">
+          <iconify-icon icon="lucide:palette" class="text-emerald-400"></iconify-icon>
+          /artritual
+        </button>
+        <button data-command="/ritualpfp" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 hover:border-emerald-400/50 hover:text-white transition-all">
+          <iconify-icon icon="lucide:user-circle" class="text-emerald-400"></iconify-icon>
+          /ritualpfp
+        </button>
+        <button data-command="/team" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 hover:border-emerald-400/50 hover:text-white transition-all">
+          <iconify-icon icon="lucide:users" class="text-emerald-400"></iconify-icon>
+          /team
+        </button>
+        <button data-command="/ritualrandom" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 hover:border-emerald-400/50 hover:text-white transition-all">
+          <iconify-icon icon="lucide:dices" class="text-emerald-400"></iconify-icon>
+          /ritualrandom
+        </button>
+        <button data-command="/ritualtest" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 hover:border-emerald-400/50 hover:text-white transition-all">
+          <iconify-icon icon="lucide:test-tube-2" class="text-emerald-400"></iconify-icon>
+          /ritualtest
+        </button>
+      </section>
+
+      <!-- Main Activity Log -->
+      <section id="chatLog" aria-live="polite" class="flex-1 overflow-y-auto p-6 flex flex-col gap-6 custom-scrollbar">
+        <!-- Dynamic messages are injected here by app.js -->
+      </section>
+
+      <!-- Input Area -->
+      <div class="p-6 pt-2 bg-gradient-to-t from-slate-950 to-transparent">
+        <form id="chatForm" class="relative group">
+          <div class="absolute -top-6 left-2 flex items-center gap-2">
+            <span class="text-[10px] text-slate-500 font-mono bg-slate-950 px-2 rounded border border-slate-800">Press <kbd class="text-slate-300">Shift+Enter</kbd> for multi-line</span>
+          </div>
+          <div class="relative flex items-end gap-3 bg-slate-900 border-2 border-slate-800 focus-within:border-emerald-400/40 rounded-2xl p-3 shadow-2xl transition-all">
+            <textarea 
+              id="chatInput" 
+              placeholder="Execute command or ask RITTY..." 
+              rows="2" 
+              class="flex-1 bg-transparent border-none text-slate-200 focus:ring-0 resize-none font-mono text-sm leading-relaxed custom-scrollbar"
+            ></textarea>
+            <button 
+              type="submit" 
+              id="sendBtn" 
+              class="h-11 w-11 flex items-center justify-center rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-[0_0_20px_rgba(136,245,209,0.3)] transition-all hover:scale-105 active:scale-95"
+            >
+              <iconify-icon icon="lucide:arrow-right" class="text-2xl"></iconify-icon>
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="/app/app.js" type="module"></script>
+</body>
+</html>

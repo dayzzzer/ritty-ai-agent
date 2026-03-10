@@ -1,0 +1,47 @@
+services:
+  - type: worker
+    name: ritty-discord-bot
+    runtime: node
+    rootDir: .
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:discord-worker
+    envVars:
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_GUILD_ID
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5-mini
+      - key: OPENAI_EMBEDDING_MODEL
+        value: text-embedding-3-small
+      - key: ARTS_API_URL
+        value: https://ritualarts.xyz/api/arts
+      - key: PFP_ASSETS_ROOT
+        value: ./assets/characters
+      - key: TEAM_DATA_PATH
+        value: ./src/data/team.json
+      - key: FACTS_DATA_PATH
+        value: ./src/data/ritual_facts.json
+      - key: QUIZ_DATA_PATH
+        value: ./src/data/quiz_questions.json
+      - key: WHAT_IS_RITUAL_IMAGE_PATH
+        value: ./files by user/what is ritual/ritual-chain.svg
+      - key: WEB_IDLE_VIDEO_PATH
+        value: ./files by user/HI/IMG_9732.MP4
+      - key: WEB_REACTION_VIDEO_PATH
+        value: ./files by user/HI/REACTION.mp4
+      - key: DOCS_INDEX_PATH
+        value: ./storage/ritual_docs.index.json
+      - key: DOCS_SOURCES_PATH
+        value: ./storage/ritual_docs.sources.json
+      - key: DOCS_SEED_URLS_PATH
+        value: ./src/data/docs_seed_urls.json
+      - key: PREFIX_COMMAND_TOKEN
+        value: "!"
+      - key: ENABLE_DOCS_CRON
+        value: "false"

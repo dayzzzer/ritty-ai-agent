@@ -1,0 +1,27 @@
+[
+  {
+    "id": "fact-1",
+    "text": "Ritual is positioned as infrastructure for onchain AI coordination and execution.",
+    "source": "https://www.ritualfoundation.org/docs/overview/what-is-ritual"
+  },
+  {
+    "id": "fact-2",
+    "text": "Ritual documentation is organized in a developer-focused docs portal by the Ritual Foundation.",
+    "source": "https://www.ritualfoundation.org/docs/overview/what-is-ritual"
+  },
+  {
+    "id": "fact-3",
+    "text": "Ritual resources are published across ritual.net and ritualfoundation.org domains for ecosystem and technical context.",
+    "source": "https://ritual.net/"
+  },
+  {
+    "id": "fact-4",
+    "text": "The bot can retrieve documentation-grounded answers by searching indexed Ritual docs snippets before generating a response.",
+    "source": "https://www.ritualfoundation.org/docs/overview/what-is-ritual"
+  },
+  {
+    "id": "fact-5",
+    "text": "Ritual technical knowledge for this bot is designed to be refreshed by scheduled re-indexing of official docs sources.",
+    "source": "https://www.ritualfoundation.org/docs/overview/what-is-ritual"
+  }
+]

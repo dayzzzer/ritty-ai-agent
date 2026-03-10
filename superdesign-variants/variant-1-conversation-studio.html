@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RITTY AI | Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      @import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,300,400&display=swap');
+      
+      body {
+        font-family: 'Satoshi', sans-serif;
+        background-color: #05070d;
+        color: #e7ecf9;
+      }
+      
+      h1, h2, h3, .font-display {
+        font-family: 'Space Grotesk', sans-serif;
+      }
+
+      .chat-log::-webkit-scrollbar {
+        width: 4px;
+      }
+      .chat-log::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .chat-log::-webkit-scrollbar-thumb {
+        background: #28324a;
+        border-radius: 10px;
+      }
+
+      .reaction-overlay {
+        background: radial-gradient(circle at center, rgba(136, 245, 209, 0.16) 0%, rgba(82, 179, 255, 0.08) 40%, transparent 75%);
+        animation: pulse 0.9s ease-in-out;
+      }
+
+      @keyframes pulse {
+        0% { opacity: 0; }
+        50% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      .glass {
+        background: rgba(15, 21, 35, 0.8);
+        backdrop-filter: blur(8px);
+      }
+    </style>
+  </head>
+  <body class="antialiased">
+    <div class="flex flex-col md:flex-row h-screen overflow-hidden">
+      
+      <!-- Side Panel: Studio Visuals (Desktop) / Header (Mobile) -->
+      <aside class="w-full md:w-[320px] lg:w-[380px] flex-shrink-0 border-b md:border-b-0 md:border-r border-[#28324a] bg-[#0f1523] flex flex-col relative z-20">
+        <div class="p-4 flex items-center justify-between md:block">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 md:w-16 md:h-16 rounded-full overflow-hidden border border-[#88f5d1] ring-2 ring-[#88f5d1]/10 shrink-0 relative">
+              <video id="idleVideo" class="absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline>
+                <source src="/media/idle" type="video/mp4" />
+              </video>
+              <video id="reactionVideo" class="absolute inset-0 w-full h-full object-cover hidden" muted playsinline preload="auto">
+                <source src="/media/reaction" type="video/mp4" />
+              </video>
+              <div id="reactionOverlay" class="absolute inset-0 reaction-overlay hidden pointer-events-none"></div>
+            </div>
+            <div class="flex flex-col">
+              <h1 class="text-lg md:text-2xl font-bold tracking-tight text-[#88f5d1]">SIGGY <span class="text-[10px] md:text-xs font-normal text-[#9aabc9] uppercase tracking-widest ml-1">Live</span></h1>
+              <p class="text-xs text-[#9aabc9] hidden md:block">Interactive Character Engine</p>
+              <div class="flex items-center gap-1.5 md:mt-2">
+                <span class="w-1.5 h-1.5 bg-[#88f5d1] rounded-full animate-pulse"></span>
+                <span class="text-[10px] text-[#9aabc9] font-medium uppercase tracking-wider">Operational</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="md:hidden">
+            <button class="p-2 text-[#9aabc9]">
+              <iconify-icon icon="lucide:settings-2" class="text-xl"></iconify-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Desktop Only Stats/Info -->
+        <div class="hidden md:flex flex-col flex-1 p-6 space-y-6">
+          <div class="space-y-2">
+            <p class="text-[10px] text-[#9aabc9] uppercase font-bold tracking-widest">Studio Mode</p>
+            <h2 class="text-xl font-semibold tracking-tight">RITTY AI Hub</h2>
+            <p class="text-sm text-[#9aabc9] leading-relaxed">Web mode with Discord feature parity. Connect your Ritual wallet to unlock advanced features.</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-[#131b2d] p-3 rounded-xl border border-[#28324a]">
+              <p class="text-[10px] text-[#9aabc9] uppercase mb-1">Latency</p>
+              <p class="text-sm font-mono">24ms</p>
+            </div>
+            <div class="bg-[#131b2d] p-3 rounded-xl border border-[#28324a]">
+              <p class="text-[10px] text-[#9aabc9] uppercase mb-1">Node</p>
+              <p class="text-sm font-mono">Ritual-v1</p>
+            </div>
+          </div>
+
+          <div class="mt-auto">
+            <a id="nav-discord-link" href="#" class="flex items-center justify-between p-3 rounded-xl bg-[#131b2d] border border-[#28324a] hover:border-[#52b3ff] transition-all group">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:discord" class="text-xl text-[#52b3ff]"></iconify-icon>
+                <span class="text-sm font-medium">Discord Access</span>
+              </div>
+              <iconify-icon icon="lucide:external-link" class="text-[#9aabc9] group-hover:text-[#52b3ff]"></iconify-icon>
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content: Chat Studio -->
+      <main class="flex-1 flex flex-col bg-[#05070d] relative min-w-0">
+        
+        <!-- Header Command Bar -->
+        <header class="border-b border-[#28324a] bg-[#0f1523]/50 overflow-x-auto no-scrollbar py-2 px-4">
+          <div class="flex items-center gap-2" id="commandRow">
+            <button data-command="/askritty What is Ritual?" class="flex-shrink-0 px-3 py-1.5 rounded-lg border border-[#28324a] bg-[#131b2d] text-xs font-medium hover:border-[#88f5d1] hover:text-[#88f5d1] transition-colors flex items-center gap-1.5">
+              <iconify-icon icon="lucide:zap" class="text-[#88f5d1]"></iconify-icon>
+              /askritty
+            </button>
+            <button data-command="/artritual" class="flex-shrink-0 px-3 py-1.5 rounded-lg border border-[#28324a] bg-[#131b2d] text-xs font-medium hover:border-[#52b3ff] hover:text-[#52b3ff] transition-colors flex items-center gap-1.5">
+              <iconify-icon icon="lucide:image" class="text-[#52b3ff]"></iconify-icon>
+              /artritual
+            </button>
+            <button data-command="/team" class="flex-shrink-0 px-3 py-1.5 rounded-lg border border-[#28324a] bg-[#131b2d] text-xs font-medium hover:border-[#9aabc9] transition-colors">
+              /team
+            </button>
+            <button data-command="/ritualpfp" class="flex-shrink-0 px-3 py-1.5 rounded-lg border border-[#28324a] bg-[#131b2d] text-xs font-medium hover:border-[#9aabc9] transition-colors">
+              /ritualpfp
+            </button>
+            <button data-command="/ritualrandom" class="flex-shrink-0 px-3 py-1.5 rounded-lg border border-[#28324a] bg-[#131b2d] text-xs font-medium hover:border-[#9aabc9] transition-colors">
+              /ritualrandom
+            </button>
+          </div>
+        </header>
+
+        <!-- Chat Log -->
+        <section class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 chat-log" id="chatLog" aria-live="polite">
+          <!-- Messages will be injected here -->
+        </section>
+
+        <!-- Compact Input Bar -->
+        <div class="p-4 border-t border-[#28324a] bg-[#0f1523]">
+          <form id="chatForm" class="max-w-4xl mx-auto flex gap-3 items-end">
+            <div class="flex-1 relative flex flex-col">
+              <textarea id="chatInput" 
+                placeholder="Message RITTY AI..."
+                rows="1"
+                class="w-full bg-[#0c1322] border border-[#28324a] rounded-2xl p-4 pr-12 text-sm text-[#e7ecf9] focus:outline-none focus:ring-1 focus:ring-[#88f5d1] placeholder-[#9aabc9] resize-none transition-all"
+              ></textarea>
+              <div class="absolute right-4 bottom-4 flex items-center gap-2">
+                <button type="button" class="text-[#9aabc9] hover:text-[#e7ecf9]">
+                  <iconify-icon icon="lucide:command" class="text-lg"></iconify-icon>
+                </button>
+              </div>
+            </div>
+            <button type="submit" id="sendBtn" class="h-12 w-12 rounded-2xl bg-gradient-to-br from-[#88f5d1] to-[#52b3ff] text-[#07111f] flex items-center justify-center shadow-lg shadow-[#88f5d1]/10 hover:scale-105 active:scale-95 transition-transform">
+              <iconify-icon icon="lucide:send-horizontal" class="text-xl"></iconify-icon>
+            </button>
+          </form>
+          <p class="text-[10px] text-[#9aabc9] text-center mt-3 uppercase tracking-widest opacity-60 font-medium">
+            Ritual AI Network &bull; Secured with MPC
+          </p>
+        </div>
+      </main>
+    </div>
+
+    <script src="/app/app.js" type="module"></script>
+    <script>
+      // Adjust textarea height dynamically
+      const textarea = document.getElementById('chatInput');
+      textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+        if (this.scrollHeight > 180) {
+          this.style.overflowY = 'scroll';
+          this.style.height = '180px';
+        } else {
+          this.style.overflowY = 'hidden';
+        }
+      });
+    </script>
+  </body>
+</html>

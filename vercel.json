@@ -1,0 +1,20 @@
+{
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "public",
+  "functions": {
+    "api/web/chat.ts": {
+      "maxDuration": 60,
+      "includeFiles": "{src/data/**,storage/**,assets/characters/**,files by user/what is ritual/**}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/app/index.html"
+    },
+    {
+      "source": "/app",
+      "destination": "/app/index.html"
+    }
+  ]
+}

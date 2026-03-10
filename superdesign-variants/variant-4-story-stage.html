@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RITTY AI | Story Stage</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,400&f[]=satoshi@700,500,400&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --accent: #88f5d1;
+      --accent-2: #52b3ff;
+    }
+
+    body {
+      background-color: #05070d;
+      font-family: 'Satoshi', sans-serif;
+      overflow: hidden;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Cabinet Grotesk', sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    .glass-panel {
+      background: linear-gradient(160deg, rgba(15, 21, 35, 0.8) 0%, rgba(10, 16, 29, 0.9) 70%, rgba(9, 19, 34, 1) 100%);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(40, 50, 74, 0.5);
+    }
+
+    .glow-border {
+      box-shadow: 0 0 20px rgba(82, 179, 255, 0.1);
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(40, 50, 74, 1);
+      border-radius: 10px;
+    }
+
+    /* Video Stack Effects */
+    .video-overlay-crt {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 3px 100%;
+      pointer-events: none;
+    }
+
+    .pulse-glow {
+      animation: pulse-glow 3s infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+
+    .message-timeline-node {
+      position: relative;
+    }
+    .message-timeline-node::before {
+      content: '';
+      position: absolute;
+      left: -21px;
+      top: 12px;
+      width: 10px;
+      height: 10px;
+      background: var(--accent-2);
+      border-radius: 50%;
+      border: 2px solid #05070d;
+      z-index: 10;
+    }
+    .message-timeline-node::after {
+      content: '';
+      position: absolute;
+      left: -17px;
+      top: 22px;
+      bottom: -12px;
+      width: 2px;
+      background: rgba(40, 50, 74, 0.5);
+    }
+
+    .msg.bot {
+      border-left: 2px solid var(--accent);
+    }
+    .msg.user {
+      border-right: 2px solid var(--accent-2);
+    }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen flex flex-col p-4 md:p-6 lg:p-8 gap-6 relative overflow-hidden">
+    
+    <!-- Background Ambience -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden">
+      <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full"></div>
+      <div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full"></div>
+    </div>
+
+    <!-- Main Shell -->
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
+      
+      <!-- Character Stage (Visual Panel) -->
+      <aside class="lg:col-span-5 xl:col-span-4 flex flex-col glass-panel rounded-[2rem] overflow-hidden border border-white/5 glow-border group" id="visualPanel">
+        <div class="p-6 flex items-center justify-between border-b border-white/5">
+          <div>
+            <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              SIGGY
+            </h1>
+            <p class="text-xs uppercase tracking-widest text-slate-500 font-medium mt-1">Character Core v2.0</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="p-2 hover:bg-white/5 rounded-full text-slate-400 transition-colors" id="view-config-btn">
+              <iconify-icon icon="lucide:settings-2" class="text-xl"></iconify-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- The Stage Area -->
+        <div class="relative flex-1 bg-black overflow-hidden">
+          <div class="video-stack relative w-full h-full">
+            <video id="idleVideo" class="absolute inset-0 w-full h-full object-cover" autoplay muted loop playsinline>
+              <source src="/media/idle" type="video/mp4">
+            </video>
+            <video id="reactionVideo" class="absolute inset-0 w-full h-full object-cover hidden" muted playsinline preload="auto">
+              <source src="/media/reaction" type="video/mp4">
+            </video>
+            
+            <!-- Expressive Overlays -->
+            <div class="video-overlay-crt absolute inset-0 opacity-20"></div>
+            <div class="reaction-overlay hidden absolute inset-0 mix-blend-screen bg-gradient-to-t from-blue-500/20 to-transparent" id="reactionOverlay"></div>
+            
+            <!-- Holographic HUD -->
+            <div class="absolute inset-x-0 bottom-0 p-6 flex flex-col gap-4 pointer-events-none">
+              <div class="flex justify-between items-end">
+                <div class="space-y-1">
+                  <div class="text-[10px] text-emerald-400 font-mono tracking-tighter uppercase">Vitals Matrix</div>
+                  <div class="flex gap-1 items-end">
+                    <div class="w-1 bg-emerald-400/50 h-3 animate-[pulse_1s_infinite]"></div>
+                    <div class="w-1 bg-emerald-400/50 h-5 animate-[pulse_1.2s_infinite]"></div>
+                    <div class="w-1 bg-emerald-400/50 h-2 animate-[pulse_0.8s_infinite]"></div>
+                    <div class="w-1 bg-emerald-400/50 h-4 animate-[pulse_1.5s_infinite]"></div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-[10px] text-white/40 font-mono uppercase">Neural Sync</div>
+                  <div class="text-sm text-white/80 font-mono">98.2% Active</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Action Grid -->
+        <div class="p-4 bg-black/40 border-t border-white/5 grid grid-cols-3 gap-2">
+          <button class="flex flex-col items-center justify-center py-3 rounded-xl border border-white/5 hover:border-emerald-400/50 hover:bg-emerald-400/5 transition-all group" id="action-reboot">
+            <iconify-icon icon="lucide:refresh-cw" class="text-slate-400 group-hover:text-emerald-400 mb-1"></iconify-icon>
+            <span class="text-[10px] font-bold text-slate-500 group-hover:text-emerald-300 uppercase tracking-tighter">Reboot</span>
+          </button>
+          <button class="flex flex-col items-center justify-center py-3 rounded-xl border border-white/5 hover:border-blue-400/50 hover:bg-blue-400/5 transition-all group" id="action-ping">
+            <iconify-icon icon="lucide:zap" class="text-slate-400 group-hover:text-blue-400 mb-1"></iconify-icon>
+            <span class="text-[10px] font-bold text-slate-500 group-hover:text-blue-300 uppercase tracking-tighter">Ping</span>
+          </button>
+          <button class="flex flex-col items-center justify-center py-3 rounded-xl border border-white/5 hover:border-purple-400/50 hover:bg-purple-400/5 transition-all group" id="action-data">
+            <iconify-icon icon="lucide:database" class="text-slate-400 group-hover:text-purple-400 mb-1"></iconify-icon>
+            <span class="text-[10px] font-bold text-slate-500 group-hover:text-purple-300 uppercase tracking-tighter">Dump</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Expressive Conversation Timeline (Chat Panel) -->
+      <main class="lg:col-span-7 xl:col-span-8 flex flex-col glass-panel rounded-[2rem] border border-white/5 relative overflow-hidden">
+        
+        <!-- Narrative Header -->
+        <header class="chat-header p-6 pb-4 flex items-center justify-between border-b border-white/5 bg-[#0f1523]">
+          <div>
+            <h2 class="text-xl font-bold text-white">Neural Archive</h2>
+            <p class="text-sm text-slate-400 flex items-center gap-1.5 mt-0.5">
+              <iconify-icon icon="lucide:history" class="text-emerald-400"></iconify-icon>
+              Live connection established • Syncing history
+            </p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="hidden md:flex flex-col items-end">
+              <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Encryption</span>
+              <span class="text-xs font-mono text-emerald-400">AES-256 ACTIVE</span>
+            </div>
+            <div class="w-px h-8 bg-white/10"></div>
+            <a href="#" class="w-10 h-10 flex items-center justify-center bg-white/5 rounded-full hover:bg-white/10 transition-colors text-white" id="archive-link">
+              <iconify-icon icon="lucide:download"></iconify-icon>
+            </a>
+          </div>
+        </header>
+
+        <!-- Choices/Commands Row -->
+        <section class="command-row px-6 py-4 flex gap-3 overflow-x-auto custom-scrollbar no-scrollbar border-b border-white/5 bg-[#0a101d]" id="commandRow">
+          <button data-command="/askritty What is Ritual?" class="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-emerald-500/10 hover:border-emerald-500/30 border border-white/5 text-slate-300 rounded-full text-xs font-semibold transition-all transition-colors active:scale-95">/askritty</button>
+          <button data-command="/artritual" class="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-blue-500/10 hover:border-blue-500/30 border border-white/5 text-slate-300 rounded-full text-xs font-semibold transition-all transition-colors active:scale-95">/artritual</button>
+          <button data-command="/ritualpfp" class="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-purple-500/10 hover:border-purple-500/30 border border-white/5 text-slate-300 rounded-full text-xs font-semibold transition-all transition-colors active:scale-95">/ritualpfp</button>
+          <button data-command="/team" class="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-500/20 border border-white/5 text-slate-300 rounded-full text-xs font-semibold transition-all transition-colors active:scale-95">/team</button>
+          <button data-command="/ritualrandom" class="whitespace-nowrap flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-500/20 border border-white/5 text-slate-300 rounded-full text-xs font-semibold transition-all transition-colors active:scale-95">/ritualrandom</button>
+        </section>
+
+        <!-- The Conversation Timeline -->
+        <section class="chat-log flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar relative" id="chatLog" aria-live="polite">
+          
+          <!-- Initial Message Example (System) -->
+          <div class="flex justify-center">
+            <span class="px-3 py-1 bg-white/5 border border-white/5 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest">Session Initialized</span>
+          </div>
+
+          <!-- Message Node (Bot) -->
+          <article class="msg bot message-timeline-node ml-6 max-w-2xl">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Siggy</span>
+              <span class="text-[10px] text-slate-500">09:41 AM</span>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-slate-300 leading-relaxed text-sm md:text-base">
+              Welcome to the Ritual Intelligence node. I am Siggy, your interface for the distributed AI network. How shall we proceed with today's narrative?
+            </div>
+          </article>
+
+          <!-- Message Node (User) -->
+          <article class="msg user flex flex-col items-end mr-6 ml-auto max-w-2xl">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-[10px] text-slate-500">09:42 AM</span>
+              <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Operator</span>
+            </div>
+            <div class="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-50 text-sm md:text-base shadow-lg shadow-blue-500/5">
+              Explain the concept of 'Ritual' in the context of this network.
+            </div>
+          </article>
+
+        </section>
+
+        <!-- Expressive Input -->
+        <div class="p-6 pt-2 bg-[#0a101d]/80 backdrop-blur-md">
+          <form id="chatForm" class="relative flex items-end gap-4">
+            <div class="flex-1 relative group">
+              <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 to-blue-500/20 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition-opacity duration-500"></div>
+              <textarea id="chatInput" 
+                class="relative w-full bg-[#0c1322] border border-white/10 rounded-2xl px-5 py-4 pr-14 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 transition-all resize-none overflow-hidden"
+                placeholder="Communicate with the matrix..."
+                rows="1"
+                oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+              <div class="absolute right-4 bottom-4 flex items-center gap-2">
+                <iconify-icon icon="lucide:smile" class="text-slate-500 hover:text-emerald-400 cursor-pointer transition-colors"></iconify-icon>
+              </div>
+            </div>
+            <button type="submit" id="sendBtn" 
+              class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-slate-900 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-105 active:scale-95 transition-all">
+              <iconify-icon icon="lucide:send" class="text-xl font-bold"></iconify-icon>
+            </button>
+          </form>
+          <div class="mt-3 flex items-center justify-between px-2">
+            <div class="flex items-center gap-4">
+              <button class="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase hover:text-emerald-400 transition-colors" id="attach-btn">
+                <iconify-icon icon="lucide:paperclip"></iconify-icon>
+                Attach Memory
+              </button>
+              <button class="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase hover:text-blue-400 transition-colors" id="voice-btn">
+                <iconify-icon icon="lucide:mic"></iconify-icon>
+                Voice Link
+              </button>
+            </div>
+            <span class="text-[10px] font-mono text-slate-600">SECURE NODE: RITUAL-772</span>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <!-- Status Footer Bar -->
+    <footer class="flex items-center justify-between px-6 py-2 glass-panel rounded-full border border-white/5">
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="text-[10px] font-bold text-emerald-500/80 uppercase tracking-widest">Status: Online</span>
+        </div>
+        <div class="hidden md:flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <iconify-icon icon="lucide:database"></iconify-icon>
+          Latency: 24ms
+        </div>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="#" class="text-[10px] font-bold text-slate-500 uppercase hover:text-white transition-colors tracking-widest" id="footer-docs-link">Documentation</a>
+        <a href="#" class="text-[10px] font-bold text-slate-500 uppercase hover:text-white transition-colors tracking-widest" id="footer-support-link">Support</a>
+        <div class="flex gap-3">
+          <a href="#" class="text-slate-500 hover:text-white" id="social-discord-link"><iconify-icon icon="ri:discord-fill"></iconify-icon></a>
+          <a href="#" class="text-slate-500 hover:text-white" id="social-x-link"><iconify-icon icon="ri:twitter-x-fill"></iconify-icon></a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/app/app.js" type="module"></script>
+</body>
+</html>

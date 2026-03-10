@@ -1,0 +1,314 @@
+[
+  {
+    "id": "q001",
+    "question": "Which domain hosts the official Ritual documentation?",
+    "options": [
+      "ritualfoundation.org",
+      "ritualdocs.io",
+      "ritualacademy.org",
+      "ritualknowledge.net"
+    ],
+    "correctIndex": 0,
+    "explanation": "Ritual docs are published on ritualfoundation.org/docs.",
+    "source": "https://www.ritualfoundation.org/docs"
+  },
+  {
+    "id": "q002",
+    "question": "Which page is the main documentation entry about the project itself?",
+    "options": [
+      "What is Ritual?",
+      "Model Marketplace",
+      "Node specialization",
+      "Prover Networks"
+    ],
+    "correctIndex": 0,
+    "explanation": "The overview entry page is titled 'What is Ritual?'.",
+    "source": "https://www.ritualfoundation.org/docs/overview/what-is-ritual"
+  },
+  {
+    "id": "q003",
+    "question": "Which page compares Ritual to other chains in the blockchain landscape?",
+    "options": [
+      "Ritual in the Blockchain Landscape",
+      "Ritual for Users",
+      "Resonance",
+      "Where we're going"
+    ],
+    "correctIndex": 0,
+    "explanation": "The comparison page is explicitly named 'Ritual in the Blockchain Landscape'.",
+    "source": "https://www.ritualfoundation.org/docs/landscape/ritual-vs-other-chains"
+  },
+  {
+    "id": "q004",
+    "question": "Which page focuses on Ritual versus other Crypto x AI approaches?",
+    "options": [
+      "Ritual in the Crypto × AI Landscape",
+      "Execution Sidecars",
+      "Guardians",
+      "Scheduled Transactions"
+    ],
+    "correctIndex": 0,
+    "explanation": "This comparison is covered on 'Ritual in the Crypto × AI Landscape'.",
+    "source": "https://www.ritualfoundation.org/docs/landscape/ritual-vs-other-crypto-x-ai"
+  },
+  {
+    "id": "q005",
+    "question": "Which 'What's new' page introduces Smart Agents?",
+    "options": [
+      "Smart Agents",
+      "EVM++",
+      "Ritual ↔︎ World",
+      "Expressive Blockchains"
+    ],
+    "correctIndex": 0,
+    "explanation": "Smart Agents have a dedicated 'What's new' page.",
+    "source": "https://www.ritualfoundation.org/docs/whats-new/agents"
+  },
+  {
+    "id": "q006",
+    "question": "Which 'What's new' page is dedicated to Resonance?",
+    "options": [
+      "Resonance",
+      "Symphony",
+      "Infernet ↔︎ Chain",
+      "Ritual for Node Runners"
+    ],
+    "correctIndex": 0,
+    "explanation": "There is a specific 'What's new' page for Resonance.",
+    "source": "https://www.ritualfoundation.org/docs/whats-new/resonance"
+  },
+  {
+    "id": "q007",
+    "question": "Which 'What's new' page is dedicated to Symphony?",
+    "options": [
+      "Symphony",
+      "Modular Storage",
+      "Execution Sidecars",
+      "Model Marketplace"
+    ],
+    "correctIndex": 0,
+    "explanation": "Symphony has its own page in the 'What's new' section.",
+    "source": "https://www.ritualfoundation.org/docs/whats-new/symphony"
+  },
+  {
+    "id": "q008",
+    "question": "Where in docs is node specialization introduced as a new feature?",
+    "options": [
+      "Node specialization",
+      "Ritual for Users",
+      "EVM++",
+      "Ritual in the Blockchain Landscape"
+    ],
+    "correctIndex": 0,
+    "explanation": "Node specialization appears under 'What's new'.",
+    "source": "https://www.ritualfoundation.org/docs/whats-new/node-specialization"
+  },
+  {
+    "id": "q009",
+    "question": "Which page in 'What's new' covers Guardians?",
+    "options": [
+      "Guardians",
+      "Scheduled Transactions",
+      "Ritual ↔︎ World",
+      "L2 Rollup-as-a-Service"
+    ],
+    "correctIndex": 0,
+    "explanation": "Guardians are described on the dedicated page in 'What's new'.",
+    "source": "https://www.ritualfoundation.org/docs/whats-new/guardians"
+  },
+  {
+    "id": "q010",
+    "question": "Which page introduces Modular Storage?",
+    "options": [
+      "Modular Storage",
+      "Resonance",
+      "Prover Networks",
+      "Ritual for Node Runners"
+    ],
+    "correctIndex": 0,
+    "explanation": "Modular Storage is listed in 'What's new'.",
+    "source": "https://www.ritualfoundation.org/docs/whats-new/modular-storage"
+  },
+  {
+    "id": "q011",
+    "question": "Which documentation page is written for end users?",
+    "options": [
+      "Ritual for Users",
+      "Ritual for Node Runners",
+      "Infernet ↔︎ Chain",
+      "Ritual in the Crypto × AI Landscape"
+    ],
+    "correctIndex": 0,
+    "explanation": "End-user guidance is in 'Ritual for Users'.",
+    "source": "https://www.ritualfoundation.org/docs/using-ritual/ritual-for-users"
+  },
+  {
+    "id": "q012",
+    "question": "Which documentation page is aimed at node operators?",
+    "options": [
+      "Ritual for Node Runners",
+      "Ritual for Users",
+      "Smart Agents",
+      "Model Marketplace"
+    ],
+    "correctIndex": 0,
+    "explanation": "Node operator guidance is on 'Ritual for Node Runners'.",
+    "source": "https://www.ritualfoundation.org/docs/using-ritual/ritual-for-node-runners"
+  },
+  {
+    "id": "q013",
+    "question": "Which architecture page covers EVM++?",
+    "options": [
+      "EVM++",
+      "Scheduled Transactions",
+      "Execution Sidecars",
+      "Ritual ↔︎ World"
+    ],
+    "correctIndex": 0,
+    "explanation": "EVM++ has its own page in the Architecture section.",
+    "source": "https://www.ritualfoundation.org/docs/architecture/evm++"
+  },
+  {
+    "id": "q014",
+    "question": "Which architecture page describes Execution Sidecars?",
+    "options": [
+      "Execution Sidecars",
+      "Symphony",
+      "Resonance",
+      "Guardians"
+    ],
+    "correctIndex": 0,
+    "explanation": "Execution Sidecars are documented under Architecture.",
+    "source": "https://www.ritualfoundation.org/docs/architecture/execution-sidecars"
+  },
+  {
+    "id": "q015",
+    "question": "Which architecture page specifically describes Resonance?",
+    "options": [
+      "Resonance",
+      "Smart Agents",
+      "Model Marketplace",
+      "Ritual for Users"
+    ],
+    "correctIndex": 0,
+    "explanation": "Resonance appears as a dedicated Architecture page.",
+    "source": "https://www.ritualfoundation.org/docs/architecture/resonance"
+  },
+  {
+    "id": "q016",
+    "question": "Which architecture page specifically describes Symphony?",
+    "options": [
+      "Symphony",
+      "Node specialization",
+      "L2 Rollup-as-a-Service",
+      "Ritual ↔︎ World"
+    ],
+    "correctIndex": 0,
+    "explanation": "Symphony has a dedicated page in Architecture.",
+    "source": "https://www.ritualfoundation.org/docs/architecture/symphony"
+  },
+  {
+    "id": "q017",
+    "question": "Which architecture page focuses on scheduled execution?",
+    "options": [
+      "Scheduled Transactions",
+      "What is Ritual?",
+      "Expressive Blockchains",
+      "Ritual for Node Runners"
+    ],
+    "correctIndex": 0,
+    "explanation": "Scheduled execution is covered in 'Scheduled Transactions'.",
+    "source": "https://www.ritualfoundation.org/docs/architecture/scheduled-transactions"
+  },
+  {
+    "id": "q018",
+    "question": "Which page documents the Infernet and chain connection?",
+    "options": [
+      "Infernet ↔︎ Chain",
+      "Ritual ↔︎ World",
+      "Resonance",
+      "Prover Networks"
+    ],
+    "correctIndex": 0,
+    "explanation": "The connector page is titled 'Infernet ↔︎ Chain'.",
+    "source": "https://www.ritualfoundation.org/docs/architecture/infernet-to-chain"
+  },
+  {
+    "id": "q019",
+    "question": "Which page documents Ritual integration with external systems?",
+    "options": [
+      "Ritual ↔︎ World",
+      "Infernet ↔︎ Chain",
+      "EVM++",
+      "Smart Agents"
+    ],
+    "correctIndex": 0,
+    "explanation": "External integration is covered in 'Ritual ↔︎ World'.",
+    "source": "https://www.ritualfoundation.org/docs/architecture/ritual-to-world"
+  },
+  {
+    "id": "q020",
+    "question": "Which page in 'Beyond Crypto x AI' focuses on expressive blockchains?",
+    "options": [
+      "Expressive Blockchains",
+      "Model Marketplace",
+      "Guardians",
+      "Ritual in the Blockchain Landscape"
+    ],
+    "correctIndex": 0,
+    "explanation": "Expressive blockchains are covered in a dedicated page.",
+    "source": "https://www.ritualfoundation.org/docs/beyond-crypto-x-ai/expressive-blockchains"
+  },
+  {
+    "id": "q021",
+    "question": "Which page in 'Beyond Crypto x AI' discusses prover networks?",
+    "options": [
+      "Prover Networks",
+      "Execution Sidecars",
+      "Ritual for Users",
+      "Resonance"
+    ],
+    "correctIndex": 0,
+    "explanation": "Prover-focused content is on 'Prover Networks'.",
+    "source": "https://www.ritualfoundation.org/docs/beyond-crypto-x-ai/prover-networks"
+  },
+  {
+    "id": "q022",
+    "question": "Which page in 'Beyond Crypto x AI' covers L2 Rollup-as-a-Service?",
+    "options": [
+      "L2 Rollup-as-a-Service",
+      "Node specialization",
+      "Ritual ↔︎ World",
+      "What is Ritual?"
+    ],
+    "correctIndex": 0,
+    "explanation": "RaaS content is documented under 'L2 Rollup-as-a-Service'.",
+    "source": "https://www.ritualfoundation.org/docs/beyond-crypto-x-ai/l2-raas"
+  },
+  {
+    "id": "q023",
+    "question": "Which page in 'Beyond Crypto x AI' covers a model marketplace concept?",
+    "options": [
+      "Model Marketplace",
+      "Scheduled Transactions",
+      "Ritual for Node Runners",
+      "Guardians"
+    ],
+    "correctIndex": 0,
+    "explanation": "The model marketplace concept has its own page.",
+    "source": "https://www.ritualfoundation.org/docs/beyond-crypto-x-ai/model-marketplace"
+  },
+  {
+    "id": "q024",
+    "question": "Which roadmap page describes future direction?",
+    "options": [
+      "Where we're going",
+      "What is Ritual?",
+      "Smart Agents",
+      "Ritual in the Crypto × AI Landscape"
+    ],
+    "correctIndex": 0,
+    "explanation": "Roadmap direction is described on 'Where we're going'.",
+    "source": "https://www.ritualfoundation.org/docs/roadmap/going"
+  }
+]
