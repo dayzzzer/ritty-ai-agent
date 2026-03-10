@@ -7,7 +7,6 @@ export const newsiggyCommand: BotCommand = {
   name: 'newsiggy',
   description: 'Create your base Common Siggy',
   aliases: ['newsiggy'],
-  deferReply: false,
   async execute(ctx) {
     const result = await ctx.services.siggyRpgService.createSiggy(ctx.userId, ctx.username);
     const content = result.created
@@ -24,7 +23,7 @@ export const newsiggyCommand: BotCommand = {
     } catch (error) {
       logger.warn({ err: error }, 'Failed to send Siggy image attachment in /newsiggy');
       await ctx.reply({
-        content: `${content}\n\nImage upload failed. Please enable "Attach Files" permission for the bot.`,
+        content: `${content}\n\nImage upload failed due a temporary Discord connection issue. Please retry.`,
         embeds: [buildSiggyCardEmbed(result.card)],
       });
     }

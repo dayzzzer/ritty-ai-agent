@@ -7,7 +7,6 @@ export const mysiggyCommand: BotCommand = {
   name: 'mysiggy',
   description: 'Show your Siggy stats and rarity card',
   aliases: ['mysiggy'],
-  deferReply: false,
   async execute(ctx) {
     const result = await ctx.services.siggyRpgService.getSiggyCard(ctx.userId, ctx.username);
     if (!result) {
@@ -30,8 +29,8 @@ export const mysiggyCommand: BotCommand = {
       logger.warn({ err: error }, 'Failed to send Siggy image attachment in /mysiggy');
       await ctx.reply({
         content: meditation
-          ? `${meditation}\n\nImage upload failed. Please enable "Attach Files" permission for the bot.`
-          : 'Image upload failed. Please enable "Attach Files" permission for the bot.',
+          ? `${meditation}\n\nImage upload failed due a temporary Discord connection issue. Please retry.`
+          : 'Image upload failed due a temporary Discord connection issue. Please retry.',
         embeds: [buildSiggyCardEmbed(result.card)],
       });
     }

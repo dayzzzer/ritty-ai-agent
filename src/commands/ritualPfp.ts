@@ -6,7 +6,6 @@ export const ritualPfpCommand: BotCommand = {
   name: 'ritualpfp',
   description: 'Generate a random Ritual profile picture',
   aliases: ['ritualpfp'],
-  deferReply: false,
   async execute(ctx) {
     const generated = await ctx.services.pfpService.generateRandomPfp();
 
@@ -34,7 +33,7 @@ export const ritualPfpCommand: BotCommand = {
     } catch (error) {
       logger.warn({ err: error }, 'Failed to send generated PFP attachment in /ritualpfp');
       await ctx.reply({
-        content: `${content}\n\nImage upload failed. Please enable "Attach Files" permission for the bot.`,
+        content: `${content}\n\nImage upload failed due a temporary Discord connection issue. Please retry.`,
         embeds,
       });
     }

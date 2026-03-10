@@ -322,7 +322,7 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
     ],
     partials: [Partials.Channel],
     rest: {
-      timeout: 20_000,
+      timeout: 60_000,
     },
   });
 
