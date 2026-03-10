@@ -8,6 +8,38 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function logDiscordApiDiagnostics(): Promise<void> {
+  try {
+    const response = await fetch('https://discord.com/api/v10/users/@me', {
+      headers: {
+        Authorization: `Bot ${appConfig.discord.token}`,
+      },
+    });
+
+    if (response.status === 200) {
+      const payload = (await response.json()) as { id?: string; username?: string };
+      logger.info(
+        { status: response.status, botId: payload.id, botUsername: payload.username },
+        'Discord API diagnostics succeeded',
+      );
+      return;
+    }
+
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('retry-after');
+      logger.warn(
+        { status: response.status, retryAfter },
+        'Discord API diagnostics hit rate limit',
+      );
+      return;
+    }
+
+    logger.error({ status: response.status }, 'Discord API diagnostics failed');
+  } catch (error) {
+    logger.error({ err: error }, 'Discord API diagnostics request failed');
+  }
+}
+
 function scheduleDocsReindex(services: BotServices): void {
   if (!appConfig.docsCron.enabled) {
     return;
@@ -63,6 +95,7 @@ async function startDiscordWithRetry(services: BotServices): Promise<void> {
     } catch (error) {
       const retryInMs = Math.min(120_000, 15_000 * attempt);
       logger.error({ err: error, attempt, retryInMs }, 'Discord startup failed, retrying');
+      await logDiscordApiDiagnostics();
       await sleep(retryInMs);
     }
   }
