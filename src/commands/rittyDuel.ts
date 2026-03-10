@@ -14,6 +14,7 @@ import type { SiggyDuelResult } from '../services/siggyRpgService.js';
 const DUEL_CUSTOM_PREFIX = 'duel_accept';
 const DUEL_RENDER_ROUNDS = 5;
 const DUEL_ROUND_DELAY_MS = 1800;
+const ROUND_STICKERS = ['⚔️', '💥', '🧬', '🔥', '🌩️', '🛡️', '🐾'];
 
 interface DuelStage {
   tier: string;
@@ -103,6 +104,11 @@ function getStage(round: number): DuelStage {
   return DUEL_STAGES[clamp(round, 1, DUEL_STAGES.length) - 1];
 }
 
+function getRoundSticker(round: number): string {
+  const index = (clamp(round, 1, Number.MAX_SAFE_INTEGER) - 1) % ROUND_STICKERS.length;
+  return ROUND_STICKERS[index];
+}
+
 function buildChallengeEmbed(challengerId: string, targetId: string, expiresAt: number): APIEmbed {
   return {
     color: 0x1f8b4c,
@@ -117,6 +123,31 @@ function buildChallengeEmbed(challengerId: string, targetId: string, expiresAt: 
       {
         name: 'Rules',
         value: 'Winner gains XP. Loser loses power, energy, and 20% XP.',
+        inline: false,
+      },
+    ],
+  };
+}
+
+function buildCountdownEmbed(result: SiggyDuelResult, acceptedBy: string, seconds: number): APIEmbed {
+  return {
+    color: 0x1f8b4c,
+    title: 'SIGGY DUEL // Handshake Complete',
+    description: `Accepted by <@${acceptedBy}>. Battle initialization in **${seconds}**...`,
+    fields: [
+      {
+        name: 'Challenger',
+        value: `<@${result.challenger.userId}>`,
+        inline: true,
+      },
+      {
+        name: 'Opponent',
+        value: `<@${result.opponent.userId}>`,
+        inline: true,
+      },
+      {
+        name: 'Tier Path',
+        value: DUEL_STAGES.map((stage) => `${stage.tier}: ${stage.name}`).join('\n'),
         inline: false,
       },
     ],
@@ -209,7 +240,7 @@ function buildRoundEmbed(
   const stage = getStage(currentRound);
   const history = frames
     .slice(Math.max(0, currentRound - 3), currentRound)
-    .map((frame) => `R${frame.round}: ${frame.lineA}\n${frame.lineB}`)
+    .map((frame) => `${getRoundSticker(frame.round)} ${frame.lineA}\n${frame.lineB}`)
     .join('\n\n');
 
   return {
@@ -244,7 +275,7 @@ function buildFinalEmbed(result: SiggyDuelResult, frames: DuelRoundFrame[]): API
   const winnerMention = `<@${result.winnerUserId}>`;
   const loserMention = `<@${result.loserUserId}>`;
   const challengerChance = Math.round(result.probabilityForChallenger * 100);
-  const recap = frames.map((frame) => `R${frame.round}: ${frame.lineA}`).join('\n');
+  const recap = frames.map((frame) => `${getRoundSticker(frame.round)} ${frame.lineA}`).join('\n');
 
   return {
     color: 0x57f287,
@@ -408,12 +439,18 @@ export async function handleDuelButtonInteraction(
 
     await interaction.update({
       content: '',
-      embeds: [buildRoundEmbed(result, frames, 1)],
+      embeds: [buildCountdownEmbed(result, interaction.user.id, 3)],
       components: [],
     });
     interactionAcknowledged = true;
 
-    for (let round = 2; round <= DUEL_RENDER_ROUNDS; round += 1) {
+    await sleep(1000);
+    await interaction.editReply({ content: '', embeds: [buildCountdownEmbed(result, interaction.user.id, 2)] });
+    await sleep(1000);
+    await interaction.editReply({ content: '', embeds: [buildCountdownEmbed(result, interaction.user.id, 1)] });
+    await sleep(1000);
+
+    for (let round = 1; round <= DUEL_RENDER_ROUNDS; round += 1) {
       await interaction.editReply({
         content: '',
         embeds: [buildRoundEmbed(result, frames, round)],

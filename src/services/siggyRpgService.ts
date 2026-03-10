@@ -13,10 +13,7 @@ import type {
 } from './siggyRpgTypes.js';
 
 const QUEST_DAILY_LIMIT = 2;
-const DUEL_DAILY_LIMIT = 3;
-
 const QUEST_COOLDOWN_MS = 4 * 60 * 60 * 1000;
-const DUEL_COOLDOWN_MS = 3 * 60 * 60 * 1000;
 
 const MEDITATION_DURATION_MS = 30 * 60 * 1000;
 const XP_BUFF_DURATION_MS = 15 * 60 * 1000;
@@ -584,19 +581,6 @@ export class SiggyRpgService {
     if (challengerId === opponentId) {
       throw new Error('DUEL_SELF');
     }
-    if (challenger.daily.duelsUsed >= DUEL_DAILY_LIMIT) {
-      throw new Error('DUEL_DAILY_LIMIT_CHALLENGER');
-    }
-    if (opponent.daily.duelsUsed >= DUEL_DAILY_LIMIT) {
-      throw new Error('DUEL_DAILY_LIMIT_OPPONENT');
-    }
-    if (now < challenger.cooldowns.duelReadyAt) {
-      throw new Error('DUEL_COOLDOWN_CHALLENGER');
-    }
-    if (now < opponent.cooldowns.duelReadyAt) {
-      throw new Error('DUEL_COOLDOWN_OPPONENT');
-    }
-
     const levelDiff = Math.abs(challenger.level - opponent.level);
     const rarityDiff = Math.abs(rarityRank(challenger.rarity) - rarityRank(opponent.rarity));
     if (levelDiff > 10 || rarityDiff > 1) {
@@ -649,15 +633,6 @@ export class SiggyRpgService {
     this.ensureCanAct(challenger);
     this.ensureCanAct(opponent);
 
-    if (challenger.daily.duelsUsed >= DUEL_DAILY_LIMIT || opponent.daily.duelsUsed >= DUEL_DAILY_LIMIT) {
-      this.duelChallenges.delete(challengeId);
-      throw new Error('DUEL_DAILY_LIMIT');
-    }
-    if (now < challenger.cooldowns.duelReadyAt || now < opponent.cooldowns.duelReadyAt) {
-      this.duelChallenges.delete(challengeId);
-      throw new Error('DUEL_COOLDOWN');
-    }
-
     const scoreA = this.duelScore(challenger);
     const scoreB = this.duelScore(opponent);
     const probabilityForChallenger = clamp(0.5 + clamp((scoreA - scoreB) / 200, -0.15, 0.15), 0.05, 0.95);
@@ -676,11 +651,6 @@ export class SiggyRpgService {
     loser.energyCurrent = clamp(loser.energyCurrent - energyLoss, 0, loser.power);
 
     this.applyLevelAndRarity(loser);
-
-    challenger.daily.duelsUsed += 1;
-    opponent.daily.duelsUsed += 1;
-    challenger.cooldowns.duelReadyAt = now + DUEL_COOLDOWN_MS;
-    opponent.cooldowns.duelReadyAt = now + DUEL_COOLDOWN_MS;
 
     this.duelChallenges.delete(challengeId);
     await this.persist();
@@ -714,7 +684,7 @@ export class SiggyRpgService {
   }
 
   getDuelDailyLimit(): number {
-    return DUEL_DAILY_LIMIT;
+    return Number.MAX_SAFE_INTEGER;
   }
 
   getProfileById(userId: string): SiggyProfile | null {
