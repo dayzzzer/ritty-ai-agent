@@ -2,6 +2,7 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  type APIEmbed,
   type ButtonInteraction,
 } from 'discord.js';
 import type { BotCommand } from './types.js';
@@ -13,6 +14,20 @@ import type { SiggyDuelResult } from '../services/siggyRpgService.js';
 const DUEL_CUSTOM_PREFIX = 'duel_accept';
 const DUEL_RENDER_ROUNDS = 5;
 const DUEL_ROUND_DELAY_MS = 1800;
+
+interface DuelStage {
+  tier: string;
+  name: string;
+  color: number;
+}
+
+const DUEL_STAGES: DuelStage[] = [
+  { tier: 'TIER I', name: 'Signal Probe', color: 0x1f8b4c },
+  { tier: 'TIER II', name: 'Resonance Clash', color: 0x2ea043 },
+  { tier: 'TIER III', name: 'Anomaly Pressure', color: 0x3fb950 },
+  { tier: 'TIER IV', name: 'Core Breach', color: 0xd29922 },
+  { tier: 'TIER V', name: 'Final Burst', color: 0xcf222e },
+];
 
 const duelRenderInProgress = new Set<string>();
 const duelRenderResolved = new Map<string, number>();
@@ -82,6 +97,30 @@ function healthBar(value: number): string {
   const filled = Math.round(clamp(value, 0, 100) / 10);
   const empty = 10 - filled;
   return `[${'#'.repeat(filled)}${'-'.repeat(empty)}] ${Math.max(0, Math.round(value))}%`;
+}
+
+function getStage(round: number): DuelStage {
+  return DUEL_STAGES[clamp(round, 1, DUEL_STAGES.length) - 1];
+}
+
+function buildChallengeEmbed(challengerId: string, targetId: string, expiresAt: number): APIEmbed {
+  return {
+    color: 0x1f8b4c,
+    title: 'SIGGY DUEL // Challenge Issued',
+    description: `<@${challengerId}> challenged <@${targetId}> to Siggy versus Siggy.`,
+    fields: [
+      {
+        name: 'Expires',
+        value: toRelativeTime(expiresAt),
+        inline: true,
+      },
+      {
+        name: 'Rules',
+        value: 'Winner gains XP. Loser loses power, energy, and 20% XP.',
+        inline: false,
+      },
+    ],
+  };
 }
 
 function pickRoundAction(attacker: string, defender: string): string {
@@ -161,45 +200,85 @@ function buildBattleFrames(result: SiggyDuelResult): DuelRoundFrame[] {
   return frames;
 }
 
-function buildRoundView(
+function buildRoundEmbed(
   result: SiggyDuelResult,
   frames: DuelRoundFrame[],
   currentRound: number,
-): string {
-  const challengerMention = `<@${result.challenger.userId}>`;
-  const opponentMention = `<@${result.opponent.userId}>`;
+): APIEmbed {
   const current = frames[currentRound - 1];
+  const stage = getStage(currentRound);
   const history = frames
-    .slice(0, currentRound)
-    .map((frame) => `R${frame.round}: ${frame.lineA}\n   ${frame.lineB}`)
-    .join('\n');
+    .slice(Math.max(0, currentRound - 3), currentRound)
+    .map((frame) => `R${frame.round}: ${frame.lineA}\n${frame.lineB}`)
+    .join('\n\n');
 
-  return [
-    `**SIGGY DUEL // Round ${currentRound}/${DUEL_RENDER_ROUNDS}**`,
-    `${challengerMention} ${healthBar(current.challengerHp)}`,
-    `${opponentMention} ${healthBar(current.opponentHp)}`,
-    '',
-    history,
-  ].join('\n');
+  return {
+    color: stage.color,
+    title: `SIGGY DUEL // ${stage.tier}`,
+    description: `${stage.name} // Round ${currentRound}/${DUEL_RENDER_ROUNDS}`,
+    fields: [
+      {
+        name: 'Challenger HP',
+        value: `<@${result.challenger.userId}>\n${healthBar(current.challengerHp)}`,
+        inline: true,
+      },
+      {
+        name: 'Opponent HP',
+        value: `<@${result.opponent.userId}>\n${healthBar(current.opponentHp)}`,
+        inline: true,
+      },
+      {
+        name: 'Live Feed',
+        value: history,
+        inline: false,
+      },
+    ],
+    footer: {
+      text: `${stage.tier} broadcast active`,
+    },
+  };
 }
 
-function buildFinalSummary(result: SiggyDuelResult, frames: DuelRoundFrame[]): string {
-  const challengerMention = `<@${result.challenger.userId}>`;
-  const opponentMention = `<@${result.opponent.userId}>`;
+function buildFinalEmbed(result: SiggyDuelResult, frames: DuelRoundFrame[]): APIEmbed {
+  const finalFrame = frames[frames.length - 1];
   const winnerMention = `<@${result.winnerUserId}>`;
   const loserMention = `<@${result.loserUserId}>`;
-  const finalFrame = frames[frames.length - 1];
   const challengerChance = Math.round(result.probabilityForChallenger * 100);
+  const recap = frames.map((frame) => `R${frame.round}: ${frame.lineA}`).join('\n');
 
-  return [
-    '**SIGGY DUEL // Final Result**',
-    `${challengerMention} ${healthBar(finalFrame.challengerHp)}`,
-    `${opponentMention} ${healthBar(finalFrame.opponentHp)}`,
-    '',
-    `Winner: ${winnerMention} (+${result.winnerXpGain} XP)`,
-    `Loser: ${loserMention} (-${result.loserXpLoss} XP, -${result.loserPowerLoss}% power, -${result.loserEnergyLoss}% energy)`,
-    `Pre-fight challenger win chance: ${challengerChance}%`,
-  ].join('\n');
+  return {
+    color: 0x57f287,
+    title: 'SIGGY DUEL // Final Verdict',
+    description: `Winner locked: ${winnerMention}`,
+    fields: [
+      {
+        name: 'Final HP',
+        value: [
+          `<@${result.challenger.userId}> ${healthBar(finalFrame.challengerHp)}`,
+          `<@${result.opponent.userId}> ${healthBar(finalFrame.opponentHp)}`,
+        ].join('\n'),
+        inline: false,
+      },
+      {
+        name: 'Rewards and Penalties',
+        value: [
+          `Winner: ${winnerMention} (+${result.winnerXpGain} XP)`,
+          `Loser: ${loserMention} (-${result.loserXpLoss} XP, -${result.loserPowerLoss}% power, -${result.loserEnergyLoss}% energy)`,
+        ].join('\n'),
+        inline: false,
+      },
+      {
+        name: 'Pre-fight Challenger Win Chance',
+        value: `${challengerChance}%`,
+        inline: true,
+      },
+      {
+        name: 'Round Recap',
+        value: recap,
+        inline: false,
+      },
+    ],
+  };
 }
 
 async function duelExecute(ctx: Parameters<BotCommand['execute']>[0]): Promise<void> {
@@ -221,11 +300,7 @@ async function duelExecute(ctx: Parameters<BotCommand['execute']>[0]): Promise<v
     );
 
     await ctx.reply({
-      content: [
-        `<@${ctx.userId}> challenged <@${targetId}> to a Siggy duel.`,
-        `Challenge expires ${toRelativeTime(result.challenge.expiresAt)}.`,
-        'Winner gains XP. Loser loses power, energy, and 20% XP.',
-      ].join('\n'),
+      embeds: [buildChallengeEmbed(ctx.userId, targetId, result.challenge.expiresAt)],
       components: [row.toJSON()],
     });
   } catch (error) {
@@ -332,26 +407,23 @@ export async function handleDuelButtonInteraction(
     const frames = buildBattleFrames(result);
 
     await interaction.update({
-      content: `Duel accepted by <@${interaction.user.id}>. Battle starts in **3**...`,
+      content: '',
+      embeds: [buildRoundEmbed(result, frames, 1)],
       components: [],
     });
     interactionAcknowledged = true;
 
-    await sleep(1000);
-    await interaction.editReply({ content: `Duel accepted by <@${interaction.user.id}>. Battle starts in **2**...` });
-    await sleep(1000);
-    await interaction.editReply({ content: `Duel accepted by <@${interaction.user.id}>. Battle starts in **1**...` });
-    await sleep(1000);
-
-    for (let round = 1; round <= DUEL_RENDER_ROUNDS; round += 1) {
+    for (let round = 2; round <= DUEL_RENDER_ROUNDS; round += 1) {
       await interaction.editReply({
-        content: buildRoundView(result, frames, round),
+        content: '',
+        embeds: [buildRoundEmbed(result, frames, round)],
       });
       await sleep(DUEL_ROUND_DELAY_MS);
     }
 
     await interaction.editReply({
-      content: buildFinalSummary(result, frames),
+      content: '',
+      embeds: [buildFinalEmbed(result, frames)],
       components: [],
     });
 
