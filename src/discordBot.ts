@@ -320,6 +320,9 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
       GatewayIntentBits.DirectMessages,
     ],
     partials: [Partials.Channel],
+    rest: {
+      timeout: 60_000,
+    },
   });
 
   const aiCooldown = new Map<string, number>();

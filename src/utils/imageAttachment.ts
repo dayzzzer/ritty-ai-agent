@@ -28,12 +28,13 @@ export async function buildImageAttachmentFromPath(imagePath: string): Promise<I
   }
 
   const buffer = await sharp(imagePath)
-    .resize({ width: 1024, withoutEnlargement: true })
-    .png({ compressionLevel: 9 })
+    .resize({ width: 520, withoutEnlargement: true })
+    .flatten({ background: { r: 255, g: 255, b: 255 } })
+    .jpeg({ quality: 62, mozjpeg: true })
     .toBuffer();
 
   return {
-    name: `${baseName}.png`,
+    name: `${baseName}.jpg`,
     buffer,
   };
 }

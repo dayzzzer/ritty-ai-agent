@@ -17,18 +17,18 @@ export const mysiggyCommand: BotCommand = {
 
     const meditation = formatMeditationCompletion(result.meditationCompleted);
 
+    await ctx.reply({
+      content: meditation || undefined,
+      embeds: [buildSiggyCardEmbed(result.card)],
+    });
+
     try {
       const image = await buildImageAttachmentFromPath(result.card.imagePath);
-      await ctx.reply({
-        content: meditation || undefined,
-        embeds: [buildSiggyCardEmbed(result.card)],
+      await ctx.followUp({
         files: [{ attachment: image.buffer, name: image.name }],
       });
     } catch {
-      await ctx.reply({
-        content: meditation || undefined,
-        embeds: [buildSiggyCardEmbed(result.card)],
-      });
+      // Keep command successful even if Discord attachment upload fails.
     }
   },
 };

@@ -166,8 +166,9 @@ export class PfpService {
     const effect = chosen.find((entry) => entry.layer === 'effect')?.option;
     finalBuffer = await this.applyEffect(finalBuffer, effect?.effectPreset);
     finalBuffer = await sharp(finalBuffer)
-      .resize({ width: 1024, withoutEnlargement: true })
-      .png({ compressionLevel: 9 })
+      .resize({ width: 520, withoutEnlargement: true })
+      .flatten({ background: { r: 245, g: 249, b: 255 } })
+      .jpeg({ quality: 62, mozjpeg: true })
       .toBuffer();
 
     return {
