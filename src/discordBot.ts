@@ -516,8 +516,8 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
   });
 
   try {
-    await client.login(appConfig.discord.token);
-    await waitForClientReady(client);
+    const readyPromise = waitForClientReady(client);
+    await Promise.all([client.login(appConfig.discord.token), readyPromise]);
   } catch (error) {
     client.destroy();
     throw error;
