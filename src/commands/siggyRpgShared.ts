@@ -44,13 +44,18 @@ export function humanItemName(item: FeedItemType): string {
   }
 }
 
-export function buildSiggyCardEmbed(card: SiggyStatCard): APIEmbed {
+export function buildSiggyCardEmbed(card: SiggyStatCard, imageUrl?: string): APIEmbed {
   return {
     title: card.title,
     description: [`Level ${card.level}`, '', `Power: ${card.power}%`, `Energy: ${card.energy}%`, `XP: ${card.xp}`].join('\n'),
     footer: {
       text: `User: ${card.owner}`,
     },
+    image: imageUrl
+      ? {
+          url: imageUrl,
+        }
+      : undefined,
   };
 }
 

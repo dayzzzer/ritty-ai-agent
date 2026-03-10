@@ -2,6 +2,7 @@ import type { BotCommand } from './types.js';
 import { buildImageAttachmentFromPath } from '../utils/imageAttachment.js';
 import { buildSiggyCardEmbed } from './siggyRpgShared.js';
 import { logger } from '../logger.js';
+import { appConfig } from '../config.js';
 
 export const newsiggyCommand: BotCommand = {
   name: 'newsiggy',
@@ -12,7 +13,18 @@ export const newsiggyCommand: BotCommand = {
     const content = result.created
       ? 'Your Siggy has been created.'
       : 'You already have a Siggy. Showing your current profile.';
-    const embed = buildSiggyCardEmbed(result.card);
+    const imageUrl = appConfig.mediaBaseUrl
+      ? `${appConfig.mediaBaseUrl}/media/siggy/${result.card.rarity.toLowerCase()}`
+      : undefined;
+    const embed = buildSiggyCardEmbed(result.card, imageUrl);
+
+    if (imageUrl) {
+      await ctx.reply({
+        content,
+        embeds: [embed],
+      });
+      return;
+    }
     let image: Awaited<ReturnType<typeof buildImageAttachmentFromPath>>;
 
     try {

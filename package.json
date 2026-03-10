@@ -12,6 +12,7 @@
     "vercel-build": "node scripts/prepare-vercel.mjs",
     "start": "node dist/index.js",
     "start:discord-worker": "node dist/discordWorker.js",
+    "start:media": "node dist/mediaServer.js",
     "check": "tsc --noEmit",
     "ingest:ritual-docs": "tsx src/scripts/ingestDocs.ts",
     "register:commands": "tsx src/scripts/registerCommands.ts"

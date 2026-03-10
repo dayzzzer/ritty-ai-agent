@@ -44,6 +44,8 @@ const envSchema = z.object({
     .default('8787')
     .transform((value) => Number.parseInt(value, 10))
     .pipe(z.number().int().min(1).max(65535)),
+  MEDIA_BASE_URL: z.string().url().default('https://ritty-media.onrender.com'),
+  MEDIA_PUBLIC_BASE_URL: z.string().url().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -96,6 +98,8 @@ export const appConfig = {
     hourUtc: env.DOCS_CRON_HOUR_UTC,
   },
   healthcheckPort: env.HEALTHCHECK_PORT,
+  mediaBaseUrl: env.MEDIA_BASE_URL,
+  mediaPublicBaseUrl: env.MEDIA_PUBLIC_BASE_URL,
 } as const;
 
 export type AppConfig = typeof appConfig;
