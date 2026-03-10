@@ -7,6 +7,7 @@ export const artRitualCommand: BotCommand = {
   name: 'artritual',
   description: 'Show a random Ritual community artwork',
   aliases: ['artritual'],
+  deferReply: false,
   async execute(ctx) {
     try {
       if (appConfig.mediaBaseUrl) {
