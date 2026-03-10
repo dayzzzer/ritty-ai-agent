@@ -8,14 +8,23 @@ export const newsiggyCommand: BotCommand = {
   aliases: ['newsiggy'],
   async execute(ctx) {
     const result = await ctx.services.siggyRpgService.createSiggy(ctx.userId, ctx.username);
-    const image = await buildImageAttachmentFromPath(result.card.imagePath);
-
     await ctx.reply({
       content: result.created
         ? 'Your Siggy has been created.'
         : 'You already have a Siggy. Showing your current profile.',
       embeds: [buildSiggyCardEmbed(result.card)],
-      files: [{ attachment: image.buffer, name: image.name }],
     });
+
+    try {
+      const image = await buildImageAttachmentFromPath(result.card.imagePath);
+      await ctx.followUp({
+        content: 'Siggy card image:',
+        files: [{ attachment: image.buffer, name: image.name }],
+      });
+    } catch {
+      await ctx.followUp({
+        content: 'Siggy was created, but I could not attach the image this time.',
+      });
+    }
   },
 };

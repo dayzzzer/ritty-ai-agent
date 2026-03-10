@@ -15,13 +15,23 @@ export const mysiggyCommand: BotCommand = {
       return;
     }
 
-    const image = await buildImageAttachmentFromPath(result.card.imagePath);
     const meditation = formatMeditationCompletion(result.meditationCompleted);
 
     await ctx.reply({
       content: meditation || undefined,
       embeds: [buildSiggyCardEmbed(result.card)],
-      files: [{ attachment: image.buffer, name: image.name }],
     });
+
+    try {
+      const image = await buildImageAttachmentFromPath(result.card.imagePath);
+      await ctx.followUp({
+        content: 'Siggy card image:',
+        files: [{ attachment: image.buffer, name: image.name }],
+      });
+    } catch {
+      await ctx.followUp({
+        content: 'I could not attach the Siggy image right now.',
+      });
+    }
   },
 };

@@ -27,5 +27,13 @@ export async function buildImageAttachmentFromPath(imagePath: string): Promise<I
     };
   }
 
-  return buildFileAttachmentFromPath(imagePath);
+  const buffer = await sharp(imagePath)
+    .resize({ width: 1024, withoutEnlargement: true })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+
+  return {
+    name: `${baseName}.png`,
+    buffer,
+  };
 }
