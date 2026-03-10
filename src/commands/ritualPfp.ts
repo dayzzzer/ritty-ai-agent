@@ -1,5 +1,6 @@
 import type { BotCommand } from './types.js';
 import { localize } from '../utils/language.js';
+import { logger } from '../logger.js';
 
 export const ritualPfpCommand: BotCommand = {
   name: 'ritualpfp',
@@ -29,9 +30,10 @@ export const ritualPfpCommand: BotCommand = {
         ],
         embeds,
       });
-    } catch {
+    } catch (error) {
+      logger.warn({ err: error }, 'Failed to send generated PFP attachment in /ritualpfp');
       await ctx.reply({
-        content,
+        content: `${content}\n\nImage upload failed. Please enable "Attach Files" permission for the bot.`,
         embeds,
       });
     }

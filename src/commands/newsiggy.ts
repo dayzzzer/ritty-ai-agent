@@ -1,6 +1,7 @@
 import type { BotCommand } from './types.js';
 import { buildImageAttachmentFromPath } from '../utils/imageAttachment.js';
 import { buildSiggyCardEmbed } from './siggyRpgShared.js';
+import { logger } from '../logger.js';
 
 export const newsiggyCommand: BotCommand = {
   name: 'newsiggy',
@@ -19,9 +20,10 @@ export const newsiggyCommand: BotCommand = {
         embeds: [buildSiggyCardEmbed(result.card)],
         files: [{ attachment: image.buffer, name: image.name }],
       });
-    } catch {
+    } catch (error) {
+      logger.warn({ err: error }, 'Failed to send Siggy image attachment in /newsiggy');
       await ctx.reply({
-        content,
+        content: `${content}\n\nImage upload failed. Please enable "Attach Files" permission for the bot.`,
         embeds: [buildSiggyCardEmbed(result.card)],
       });
     }

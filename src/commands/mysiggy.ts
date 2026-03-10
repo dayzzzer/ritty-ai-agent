@@ -1,6 +1,7 @@
 import type { BotCommand } from './types.js';
 import { buildImageAttachmentFromPath } from '../utils/imageAttachment.js';
 import { buildSiggyCardEmbed, formatMeditationCompletion } from './siggyRpgShared.js';
+import { logger } from '../logger.js';
 
 export const mysiggyCommand: BotCommand = {
   name: 'mysiggy',
@@ -24,9 +25,12 @@ export const mysiggyCommand: BotCommand = {
         embeds: [buildSiggyCardEmbed(result.card)],
         files: [{ attachment: image.buffer, name: image.name }],
       });
-    } catch {
+    } catch (error) {
+      logger.warn({ err: error }, 'Failed to send Siggy image attachment in /mysiggy');
       await ctx.reply({
-        content: meditation || undefined,
+        content: meditation
+          ? `${meditation}\n\nImage upload failed. Please enable "Attach Files" permission for the bot.`
+          : 'Image upload failed. Please enable "Attach Files" permission for the bot.',
         embeds: [buildSiggyCardEmbed(result.card)],
       });
     }
