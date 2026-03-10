@@ -2,9 +2,12 @@ import { createServer } from 'node:http';
 import { extname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { appConfig } from './config.js';
+import path from 'node:path';
+import { config as loadEnv } from 'dotenv';
 import { logger } from './logger.js';
 import { PfpService } from './services/pfpService.js';
+
+loadEnv();
 
 interface CachedPfp {
   buffer: Buffer;
@@ -12,16 +15,19 @@ interface CachedPfp {
   createdAt: number;
 }
 
-const pfpService = new PfpService(appConfig.pfpAssetsRoot);
+const pfpAssetsRoot = path.resolve(process.env.PFP_ASSETS_ROOT ?? './assets/characters');
+const mediaPublicBaseUrl = process.env.MEDIA_PUBLIC_BASE_URL;
+
+const pfpService = new PfpService(pfpAssetsRoot);
 const pfpCache = new Map<string, CachedPfp>();
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
 const siggyImageByRarity: Record<string, string> = {
-  common: appConfig.siggyRpg.rarityImages.Common,
-  rare: appConfig.siggyRpg.rarityImages.Rare,
-  epic: appConfig.siggyRpg.rarityImages.Epic,
-  legendary: appConfig.siggyRpg.rarityImages.Legendary,
-  forbidden: appConfig.siggyRpg.rarityImages.Forbidden,
+  common: path.resolve(process.env.SIGGY_COMMON_IMAGE_PATH ?? './files by user/common/common.png'),
+  rare: path.resolve(process.env.SIGGY_RARE_IMAGE_PATH ?? './files by user/Rare/rare.png'),
+  epic: path.resolve(process.env.SIGGY_EPIC_IMAGE_PATH ?? './files by user/epic/epic.png'),
+  legendary: path.resolve(process.env.SIGGY_LEGENDARY_IMAGE_PATH ?? './files by user/legendary/legendary.png'),
+  forbidden: path.resolve(process.env.SIGGY_FORBIDDEN_IMAGE_PATH ?? './files by user/forbidden/forbidden.png'),
 };
 
 function getMimeByPath(filePath: string): string {
@@ -61,8 +67,8 @@ function jsonResponse(body: unknown, status = 200): { status: number; body: stri
 }
 
 function resolveBaseUrl(hostHeader: string | undefined): string | null {
-  if (appConfig.mediaPublicBaseUrl) {
-    return appConfig.mediaPublicBaseUrl;
+  if (mediaPublicBaseUrl) {
+    return mediaPublicBaseUrl;
   }
   if (!hostHeader) {
     return null;
