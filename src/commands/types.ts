@@ -30,6 +30,7 @@ export interface BotCommand {
   name: string;
   description: string;
   aliases: string[];
+  deferReply?: boolean;
   slashOptions?: Array<{
     name: string;
     description: string;

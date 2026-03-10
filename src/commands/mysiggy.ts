@@ -7,6 +7,7 @@ export const mysiggyCommand: BotCommand = {
   name: 'mysiggy',
   description: 'Show your Siggy stats and rarity card',
   aliases: ['mysiggy'],
+  deferReply: false,
   async execute(ctx) {
     const result = await ctx.services.siggyRpgService.getSiggyCard(ctx.userId, ctx.username);
     if (!result) {

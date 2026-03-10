@@ -6,6 +6,7 @@ export const ritualPfpCommand: BotCommand = {
   name: 'ritualpfp',
   description: 'Generate a random Ritual profile picture',
   aliases: ['ritualpfp'],
+  deferReply: false,
   async execute(ctx) {
     const generated = await ctx.services.pfpService.generateRandomPfp();
 

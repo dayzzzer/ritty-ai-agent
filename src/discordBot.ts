@@ -232,8 +232,9 @@ async function executeSlashCommand(
   services: BotServices,
 ): Promise<void> {
   const locale: SupportedLocale = 'en';
+  const shouldDefer = command.deferReply ?? true;
 
-  if (!interaction.deferred && !interaction.replied) {
+  if (shouldDefer && !interaction.deferred && !interaction.replied) {
     await interaction.deferReply();
   }
 
@@ -327,16 +328,8 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
 
   const aiCooldown = new Map<string, number>();
 
-  const readyPromise = new Promise<void>((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error('Discord client did not reach ready state within timeout'));
-    }, 45_000);
-
-    client.once(Events.ClientReady, (readyClient) => {
-      clearTimeout(timeout);
-      logger.info({ user: readyClient.user.tag }, 'RITTY AI is online');
-      resolve();
-    });
+  client.once(Events.ClientReady, (readyClient) => {
+    logger.info({ user: readyClient.user.tag }, 'RITTY AI is online');
   });
 
   client.on(Events.InteractionCreate, async (interaction) => {
@@ -477,6 +470,5 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
   });
 
   await client.login(appConfig.discord.token);
-  await readyPromise;
   return client;
 }
