@@ -1,6 +1,7 @@
 import {
   ChannelType,
   Client,
+  DiscordAPIError,
   Events,
   GatewayIntentBits,
   Partials,
@@ -353,6 +354,11 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
 
       await executeSlashCommand(interaction, command, services);
     } catch (error) {
+      if (error instanceof DiscordAPIError && (error.code === 10062 || error.code === 40060)) {
+        logger.warn({ err: error, code: error.code }, 'Interaction was already acknowledged elsewhere');
+        return;
+      }
+
       logger.error({ err: error }, 'Interaction handling failed');
       if (interaction.isRepliable()) {
         try {

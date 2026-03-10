@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import path from 'node:path';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { logger } from '../logger.js';
 import type {
   DuelChallenge,
   FeedItemType,
@@ -190,6 +191,10 @@ export class SiggyRpgService {
     private readonly rarityImages: SiggyRpgImagePaths,
   ) {}
 
+  private profilesCount(): number {
+    return Object.keys(this.state.profiles).length;
+  }
+
   private async ensureLoaded(): Promise<void> {
     if (this.loaded) {
       return;
@@ -201,8 +206,13 @@ export class SiggyRpgService {
       this.state = {
         profiles: parsed.profiles ?? {},
       };
+      logger.info(
+        { statePath: this.statePath, profiles: this.profilesCount() },
+        'SiggyRpg state loaded',
+      );
     } catch {
       this.state = { profiles: {} };
+      logger.warn({ statePath: this.statePath }, 'SiggyRpg state file missing or invalid, starting empty');
     }
 
     this.loaded = true;
@@ -217,6 +227,10 @@ export class SiggyRpgService {
       await mkdir(dir, { recursive: true });
       await writeFile(tmpPath, payload, 'utf8');
       await rename(tmpPath, this.statePath);
+      logger.info(
+        { statePath: this.statePath, profiles: this.profilesCount() },
+        'SiggyRpg state persisted',
+      );
     });
 
     await this.persistChain;
@@ -315,6 +329,10 @@ export class SiggyRpgService {
     const existing = this.state.profiles[userId];
     if (existing) {
       existing.usernameSnapshot = username;
+      logger.info(
+        { userId, username, profiles: this.profilesCount() },
+        'Siggy already exists for user',
+      );
       return { created: false, card: this.toStatCard(existing) };
     }
 
@@ -344,6 +362,10 @@ export class SiggyRpgService {
 
     this.state.profiles[userId] = profile;
     await this.persist();
+    logger.info(
+      { userId, username, profiles: this.profilesCount() },
+      'Siggy created for user',
+    );
     return { created: true, card: this.toStatCard(profile) };
   }
 
@@ -351,6 +373,10 @@ export class SiggyRpgService {
     await this.ensureLoaded();
     const profile = this.state.profiles[userId];
     if (!profile) {
+      logger.warn(
+        { userId, username, profiles: this.profilesCount() },
+        'Siggy profile not found on getSiggyCard',
+      );
       return null;
     }
 

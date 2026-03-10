@@ -8,21 +8,22 @@ export const newsiggyCommand: BotCommand = {
   aliases: ['newsiggy'],
   async execute(ctx) {
     const result = await ctx.services.siggyRpgService.createSiggy(ctx.userId, ctx.username);
-    await ctx.reply({
-      content: result.created
-        ? 'Your Siggy has been created.'
-        : 'You already have a Siggy. Showing your current profile.',
-      embeds: [buildSiggyCardEmbed(result.card)],
-    });
-
     try {
       const image = await buildImageAttachmentFromPath(result.card.imagePath);
-      await ctx.followUp({
-        content: 'Siggy card image:',
+      await ctx.reply({
+        content: result.created
+          ? 'Your Siggy has been created.'
+          : 'You already have a Siggy. Showing your current profile.',
+        embeds: [buildSiggyCardEmbed(result.card)],
         files: [{ attachment: image.buffer, name: image.name }],
       });
     } catch {
-      // The main profile reply was already sent. Ignore image follow-up failures.
+      await ctx.reply({
+        content: result.created
+          ? 'Your Siggy has been created.'
+          : 'You already have a Siggy. Showing your current profile.',
+        embeds: [buildSiggyCardEmbed(result.card)],
+      });
     }
   },
 };

@@ -17,19 +17,18 @@ export const mysiggyCommand: BotCommand = {
 
     const meditation = formatMeditationCompletion(result.meditationCompleted);
 
-    await ctx.reply({
-      content: meditation || undefined,
-      embeds: [buildSiggyCardEmbed(result.card)],
-    });
-
     try {
       const image = await buildImageAttachmentFromPath(result.card.imagePath);
-      await ctx.followUp({
-        content: 'Siggy card image:',
+      await ctx.reply({
+        content: meditation || undefined,
+        embeds: [buildSiggyCardEmbed(result.card)],
         files: [{ attachment: image.buffer, name: image.name }],
       });
     } catch {
-      // The main stats reply was already sent. Ignore image follow-up failures.
+      await ctx.reply({
+        content: meditation || undefined,
+        embeds: [buildSiggyCardEmbed(result.card)],
+      });
     }
   },
 };
