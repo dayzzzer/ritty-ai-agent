@@ -19,7 +19,7 @@ export const ritualPfpCommand: BotCommand = {
       },
     ];
 
-    for (let attempt = 1; attempt <= 3; attempt += 1) {
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
       try {
         await ctx.reply({
           content,
@@ -34,8 +34,8 @@ export const ritualPfpCommand: BotCommand = {
         return;
       } catch (error) {
         logger.warn({ err: error, attempt }, 'Failed to send generated PFP attachment in /ritualpfp');
-        if (attempt < 3) {
-          await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+        if (attempt < 5) {
+          await new Promise((resolve) => setTimeout(resolve, 400 * attempt));
         }
       }
     }
