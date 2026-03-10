@@ -4,6 +4,8 @@ import { z } from 'zod';
 
 loadEnv();
 
+const defaultSiggyStatePath = process.env.RENDER ? '/var/data/siggy_rpg_state.json' : './storage/siggy_rpg_state.json';
+
 const envSchema = z.object({
   DISCORD_TOKEN: z.string().min(1),
   DISCORD_CLIENT_ID: z.string().min(1),
@@ -20,7 +22,7 @@ const envSchema = z.object({
   WEB_IDLE_VIDEO_PATH: z.string().default('./files by user/HI/IMG_9732.MP4'),
   WEB_REACTION_VIDEO_PATH: z.string().default('./files by user/HI/REACTION.mp4'),
   WEB_STATIC_DIR: z.string().default('./src/web/public'),
-  SIGGY_RPG_STATE_PATH: z.string().default('./storage/siggy_rpg_state.json'),
+  SIGGY_RPG_STATE_PATH: z.string().default(defaultSiggyStatePath),
   SIGGY_COMMON_IMAGE_PATH: z.string().default('./files by user/common/common.png'),
   SIGGY_RARE_IMAGE_PATH: z.string().default('./files by user/Rare/rare.png'),
   SIGGY_EPIC_IMAGE_PATH: z.string().default('./files by user/epic/epic.png'),
