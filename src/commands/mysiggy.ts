@@ -29,9 +29,7 @@ export const mysiggyCommand: BotCommand = {
         files: [{ attachment: image.buffer, name: image.name }],
       });
     } catch {
-      await ctx.followUp({
-        content: 'I could not attach the Siggy image right now.',
-      });
+      // The main stats reply was already sent. Ignore image follow-up failures.
     }
   },
 };

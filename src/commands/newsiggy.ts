@@ -22,9 +22,7 @@ export const newsiggyCommand: BotCommand = {
         files: [{ attachment: image.buffer, name: image.name }],
       });
     } catch {
-      await ctx.followUp({
-        content: 'Siggy was created, but I could not attach the image this time.',
-      });
+      // The main profile reply was already sent. Ignore image follow-up failures.
     }
   },
 };
