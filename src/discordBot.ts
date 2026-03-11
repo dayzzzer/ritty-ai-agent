@@ -83,6 +83,49 @@ const GREETING_IGNORED_WORDS = new Set([
   'helloooo',
 ]);
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetriableDiscordError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const candidate = error as { code?: string | number; message?: string };
+  const code = typeof candidate.code === 'string' ? candidate.code : String(candidate.code ?? '');
+  const message = (candidate.message ?? '').toLowerCase();
+
+  return (
+    code === 'UND_ERR_SOCKET' ||
+    code === 'ECONNRESET' ||
+    code === 'ETIMEDOUT' ||
+    message.includes('other side closed') ||
+    message.includes('socket') ||
+    message.includes('network')
+  );
+}
+
+async function withDiscordRetry<T>(operationName: string, operation: () => Promise<T>): Promise<T> {
+  const maxAttempts = 4;
+  let attempt = 0;
+
+  while (true) {
+    attempt += 1;
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt >= maxAttempts || !isRetriableDiscordError(error)) {
+        throw error;
+      }
+
+      const retryDelay = 250 * attempt;
+      logger.warn({ err: error, attempt, operationName, retryDelay }, 'Retrying Discord API operation after transient error');
+      await sleep(retryDelay);
+    }
+  }
+}
+
 function normalizeForIntent(input: string): string {
   return input
     .toLowerCase()
@@ -123,16 +166,20 @@ function stripGreetingTokens(input: string): string {
 
 async function replyWithGreetingVideo(message: Message): Promise<void> {
   const greetingVideo = await buildFileAttachmentFromPath(appConfig.web.idleVideoPath);
-  await message.reply({
-    files: [{ attachment: greetingVideo.buffer, name: greetingVideo.name }],
-  });
+  await withDiscordRetry('message.reply.greetingVideo', () =>
+    message.reply({
+      files: [{ attachment: greetingVideo.buffer, name: greetingVideo.name }],
+    }),
+  );
 }
 
 async function replyWithActionVideo(message: Message, action: RittyAction): Promise<void> {
   const actionVideo = await buildFileAttachmentFromPath(action.videoPath);
-  await message.reply({
-    files: [{ attachment: actionVideo.buffer, name: actionVideo.name }],
-  });
+  await withDiscordRetry(`message.reply.actionVideo.${action.id}`, () =>
+    message.reply({
+      files: [{ attachment: actionVideo.buffer, name: actionVideo.name }],
+    }),
+  );
 }
 
 async function replyWithAiAnswer(message: Message, services: BotServices, question: string): Promise<void> {
@@ -159,25 +206,30 @@ async function replyWithAiAnswer(message: Message, services: BotServices, questi
   if (answer.imagePath) {
     try {
       const image = await buildImageAttachmentFromPath(answer.imagePath);
-      await message.reply({
-        embeds: [{ ...baseEmbed, image: { url: `attachment://${image.name}` } }],
-        files: [{ attachment: image.buffer, name: image.name }],
-      });
+      await withDiscordRetry('message.reply.aiAnswer.attachmentImage', () =>
+        message.reply({
+          embeds: [{ ...baseEmbed, image: { url: `attachment://${image.name}` } }],
+          files: [{ attachment: image.buffer, name: image.name }],
+        }),
+      );
       return;
     } catch (error) {
       logger.warn({ err: error, imagePath: answer.imagePath }, 'Failed to attach AI image in Discord reply');
     }
   }
 
-  if (answer.imageUrl) {
-    await message.reply({
-      embeds: [{ ...baseEmbed, image: { url: answer.imageUrl } }],
-    });
+  const remoteImageUrl = answer.imageUrl;
+  if (remoteImageUrl) {
+    await withDiscordRetry('message.reply.aiAnswer.remoteImage', () =>
+      message.reply({
+        embeds: [{ ...baseEmbed, image: { url: remoteImageUrl } }],
+      }),
+    );
     return;
   }
 
   const citations = answer.citations.length > 0 ? `\n\nSources:\n${answer.citations.join('\n')}` : '';
-  await message.reply(`${answer.text}${citations}`.slice(0, 1900));
+  await withDiscordRetry('message.reply.aiAnswer.textOnly', () => message.reply(`${answer.text}${citations}`.slice(0, 1900)));
 }
 
 async function replyWithGreetingVideoAndAiAnswer(message: Message, services: BotServices, question: string): Promise<void> {
@@ -224,10 +276,12 @@ async function replyWithGreetingVideoAndAiAnswer(message: Message, services: Bot
     imageEmbedUrl = answer.imageUrl;
   }
 
-  await message.reply({
-    embeds: [{ ...embed, image: imageEmbedUrl ? { url: imageEmbedUrl } : undefined }],
-    files,
-  });
+  await withDiscordRetry('message.reply.greetingAndAnswer', () =>
+    message.reply({
+      embeds: [{ ...embed, image: imageEmbedUrl ? { url: imageEmbedUrl } : undefined }],
+      files,
+    }),
+  );
 }
 
 function toInteractionReplyOptions(payload: CommandResponse): InteractionReplyOptions {
@@ -296,17 +350,17 @@ async function executeSlashCommand(
     services,
     reply: async (payload: CommandResponse) => {
       if (interaction.replied) {
-        await interaction.followUp(toInteractionReplyOptions(payload));
+        await withDiscordRetry('interaction.followUp.reply', () => interaction.followUp(toInteractionReplyOptions(payload)));
         return;
       }
       if (interaction.deferred) {
-        await interaction.editReply(toInteractionEditReplyOptions(payload));
+        await withDiscordRetry('interaction.editReply.reply', () => interaction.editReply(toInteractionEditReplyOptions(payload)));
         return;
       }
-      await interaction.reply(toInteractionReplyOptions(payload));
+      await withDiscordRetry('interaction.reply.reply', () => interaction.reply(toInteractionReplyOptions(payload)));
     },
     followUp: async (payload: CommandResponse) => {
-      await interaction.followUp(toInteractionReplyOptions(payload));
+      await withDiscordRetry('interaction.followUp.followUp', () => interaction.followUp(toInteractionReplyOptions(payload)));
     },
   };
 
@@ -324,10 +378,10 @@ async function executePrefixCommand(message: Message, command: BotCommand, args:
     channelId: message.channelId,
     services,
     reply: async (payload: CommandResponse) => {
-      await message.reply(toMessageOptions(payload) as MessageCreateOptions);
+      await withDiscordRetry('message.reply.prefix.reply', () => message.reply(toMessageOptions(payload) as MessageCreateOptions));
     },
     followUp: async (payload: CommandResponse) => {
-      await message.reply(toMessageOptions(payload));
+      await withDiscordRetry('message.reply.prefix.followUp', () => message.reply(toMessageOptions(payload)));
     },
   };
 
@@ -494,7 +548,7 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
 
       const previous = aiCooldown.get(message.author.id) ?? 0;
       if (now - previous < 5000) {
-        await message.reply('Please wait a few seconds before your next AI request.');
+        await withDiscordRetry('message.reply.cooldown', () => message.reply('Please wait a few seconds before your next AI request.'));
         return;
       }
       aiCooldown.set(message.author.id, now);
@@ -523,7 +577,9 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
           try {
             await replyWithAiAnswer(message, services, questionAfterGreeting);
           } catch {
-            await message.reply('I got your question, but failed to generate an answer. Please retry once.');
+            await withDiscordRetry('message.reply.aiFallback', () =>
+              message.reply('I got your question, but failed to generate an answer. Please retry once.'),
+            );
           }
         }
         return;
