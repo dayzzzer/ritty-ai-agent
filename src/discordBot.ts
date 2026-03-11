@@ -1,4 +1,5 @@
 import {
+  type APIEmbed,
   ChannelType,
   Client,
   DiscordAPIError,
@@ -136,13 +137,30 @@ async function replyWithActionVideo(message: Message, action: RittyAction): Prom
 
 async function replyWithAiAnswer(message: Message, services: BotServices, question: string): Promise<void> {
   const answer = await services.aiService.answerRitualQuestion(question, services.getDocsIndex());
-  const citations = answer.citations.length > 0 ? `\n\nSources:\n${answer.citations.join('\n')}` : '';
-  const fallbackImageUrl = answer.imageUrl ? `\n\n${answer.imageUrl}` : '';
+  const sourcesValue = answer.citations.map((url, index) => `${index + 1}. ${url}`).join('\n');
+  const trimmedDescription = answer.text.length > 3900 ? `${answer.text.slice(0, 3897)}...` : answer.text;
+  const baseEmbed: APIEmbed = {
+    title: 'RITTY AI Answer',
+    description: trimmedDescription,
+    fields:
+      sourcesValue.length > 0
+        ? [
+            {
+              name: 'Sources',
+              value: sourcesValue.slice(0, 1024),
+            },
+          ]
+        : undefined,
+    footer: {
+      text: answer.usedRag ? 'Grounded on indexed docs' : 'General AI answer',
+    },
+  };
+
   if (answer.imagePath) {
     try {
       const image = await buildImageAttachmentFromPath(answer.imagePath);
       await message.reply({
-        content: `${answer.text}${citations}`.slice(0, 1900),
+        embeds: [{ ...baseEmbed, image: { url: `attachment://${image.name}` } }],
         files: [{ attachment: image.buffer, name: image.name }],
       });
       return;
@@ -151,7 +169,15 @@ async function replyWithAiAnswer(message: Message, services: BotServices, questi
     }
   }
 
-  await message.reply(`${answer.text}${citations}${fallbackImageUrl}`.slice(0, 1900));
+  if (answer.imageUrl) {
+    await message.reply({
+      embeds: [{ ...baseEmbed, image: { url: answer.imageUrl } }],
+    });
+    return;
+  }
+
+  const citations = answer.citations.length > 0 ? `\n\nSources:\n${answer.citations.join('\n')}` : '';
+  await message.reply(`${answer.text}${citations}`.slice(0, 1900));
 }
 
 async function replyWithGreetingVideoAndAiAnswer(message: Message, services: BotServices, question: string): Promise<void> {
@@ -160,23 +186,46 @@ async function replyWithGreetingVideoAndAiAnswer(message: Message, services: Bot
     services.aiService.answerRitualQuestion(question, services.getDocsIndex()),
   ]);
 
-  const citations = answer.citations.length > 0 ? `\n\nSources:\n${answer.citations.join('\n')}` : '';
-  const fallbackImageUrl = !answer.imagePath && answer.imageUrl ? `\n\n${answer.imageUrl}` : '';
+  const sourcesValue = answer.citations.map((url, index) => `${index + 1}. ${url}`).join('\n');
+  const trimmedDescription = answer.text.length > 3900 ? `${answer.text.slice(0, 3897)}...` : answer.text;
+  const embed: APIEmbed = {
+    title: 'RITTY AI Answer',
+    description: trimmedDescription,
+    fields:
+      sourcesValue.length > 0
+        ? [
+            {
+              name: 'Sources',
+              value: sourcesValue.slice(0, 1024),
+            },
+          ]
+        : undefined,
+    footer: {
+      text: answer.usedRag ? 'Grounded on indexed docs' : 'General AI answer',
+    },
+  };
+
   const files: Array<{ attachment: Buffer; name: string }> = [
     { attachment: greetingVideo.buffer, name: greetingVideo.name },
   ];
 
+  let imageEmbedUrl: string | undefined;
   if (answer.imagePath) {
     try {
       const image = await buildImageAttachmentFromPath(answer.imagePath);
       files.push({ attachment: image.buffer, name: image.name });
+      imageEmbedUrl = `attachment://${image.name}`;
     } catch (error) {
       logger.warn({ err: error, imagePath: answer.imagePath }, 'Failed to attach AI image in greeting reply');
     }
   }
 
+  if (!imageEmbedUrl && answer.imageUrl) {
+    imageEmbedUrl = answer.imageUrl;
+  }
+
   await message.reply({
-    content: `${answer.text}${citations}${fallbackImageUrl}`.slice(0, 1900),
+    embeds: [{ ...embed, image: imageEmbedUrl ? { url: imageEmbedUrl } : undefined }],
     files,
   });
 }
@@ -328,6 +377,7 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
   });
 
   const aiCooldown = new Map<string, number>();
+  const handledMessageIds = new Map<string, number>();
 
   client.once(Events.ClientReady, (readyClient) => {
     logger.info({ user: readyClient.user.tag }, 'RITTY AI is online');
@@ -399,6 +449,20 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
         return;
       }
 
+      const now = Date.now();
+      if (handledMessageIds.has(message.id)) {
+        return;
+      }
+      handledMessageIds.set(message.id, now);
+      if (handledMessageIds.size > 2000) {
+        const expiration = now - 10 * 60 * 1000;
+        for (const [id, ts] of handledMessageIds) {
+          if (ts < expiration) {
+            handledMessageIds.delete(id);
+          }
+        }
+      }
+
       if (await handlePrefixQuizAnswer(message, services)) {
         return;
       }
@@ -428,7 +492,6 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
         return;
       }
 
-      const now = Date.now();
       const previous = aiCooldown.get(message.author.id) ?? 0;
       if (now - previous < 5000) {
         await message.reply('Please wait a few seconds before your next AI request.');

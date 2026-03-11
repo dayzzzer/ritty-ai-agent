@@ -1,7 +1,8 @@
 import type { BotCommand } from './types.js';
 import { localize } from '../utils/language.js';
-import { buildImageAttachmentFromPath } from '../utils/imageAttachment.js';
+import { buildFileAttachmentFromPath, buildImageAttachmentFromPath } from '../utils/imageAttachment.js';
 import { logger } from '../logger.js';
+import { detectRittyActionFromText } from '../actions/rittyActions.js';
 
 export const askRittyCommand: BotCommand = {
   name: 'askritty',
@@ -28,6 +29,19 @@ export const askRittyCommand: BotCommand = {
       return;
     }
 
+    const requestedAction = detectRittyActionFromText(question);
+    if (requestedAction) {
+      try {
+        const video = await buildFileAttachmentFromPath(requestedAction.videoPath);
+        await ctx.reply({
+          files: [{ attachment: video.buffer, name: video.name }],
+        });
+        return;
+      } catch (error) {
+        logger.warn({ err: error, actionId: requestedAction.id }, 'Failed to attach askRitty action video');
+      }
+    }
+
     const index = ctx.services.getDocsIndex();
     const answer = await ctx.services.aiService.answerRitualQuestion(question, index);
     const fields =
@@ -41,9 +55,11 @@ export const askRittyCommand: BotCommand = {
         : [];
 
     const files = [];
+    let attachedImageName: string | null = null;
     if (answer.imagePath) {
       try {
         const image = await buildImageAttachmentFromPath(answer.imagePath);
+        attachedImageName = image.name;
         files.push({
           attachment: image.buffer,
           name: image.name,
@@ -59,7 +75,11 @@ export const askRittyCommand: BotCommand = {
           title: localize(ctx.locale, 'Ответ RITTY AI', 'RITTY AI Answer'),
           description: answer.text,
           fields,
-          image: answer.imageUrl ? { url: answer.imageUrl } : undefined,
+          image: attachedImageName
+            ? { url: `attachment://${attachedImageName}` }
+            : answer.imageUrl
+              ? { url: answer.imageUrl }
+              : undefined,
           footer: {
             text: answer.usedRag
               ? localize(ctx.locale, 'Ответ на основе индекса docs', 'Grounded on indexed docs')
