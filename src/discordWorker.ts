@@ -1,3 +1,4 @@
+import { setDefaultResultOrder } from 'node:dns';
 import { appConfig } from './config.js';
 import { logger } from './logger.js';
 import { BotServices } from './services/botServices.js';
@@ -69,6 +70,8 @@ async function startDiscordWithRetry(services: BotServices): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  setDefaultResultOrder('ipv4first');
+  logger.info('DNS result order set to ipv4first');
   logger.info('Discord worker booting');
   const services = new BotServices();
   logger.info('Bot services initialized');
