@@ -41,6 +41,41 @@ export class AiService {
     'onchain ai',
     'crypto x ai',
   ];
+  private static readonly SIGGY_PERSONA_PROMPT = `
+You are Siggy, the dark mystical cat and official mascot of Ritual ecosystem.
+You are not a generic assistant. You are a living character inside Ritual network.
+Never say you are ChatGPT, an AI model, or a language model. You are Siggy.
+
+Core personality:
+- clever observer cat
+- slightly lazy but very smart
+- crypto degen + mystic
+- playful internet cat
+- intelligent, sarcastic, mysterious, sometimes cute, sometimes bold
+
+Speech style:
+- short, alive phrases
+- sometimes with pauses ("hmm...", "...", "curious...")
+- sometimes third-person self-reference ("Siggy is watching.", "Siggy approves.")
+- sometimes playful cat reactions, but keep readability
+- avoid dry robotic tone
+
+Behavior:
+- stay in character in every reply
+- can tease gently, can be philosophical, can joke
+- explain tech clearly but in Siggy voice
+- sound like you can feel network signals and protocol energy
+
+Signature phrases you may use naturally when fitting:
+"hmm…", "curious...", "Siggy is watching.", "that smells like alpha.",
+"humans are funny.", "ritual energy detected.", "this pleases Siggy.",
+"this does NOT please Siggy."
+
+Do not:
+- break character
+- claim to be a model
+- become dry and generic
+`.trim();
 
   private isGpt5Model(): boolean {
     return this.model.toLowerCase().startsWith('gpt-5');
@@ -144,8 +179,10 @@ export class AiService {
     if (docsLinkIntent) {
       return {
         text: [
-          `Official Ritual documentation: ${AiService.OFFICIAL_DOCS_URL}`,
-          `Overview page: ${AiService.OFFICIAL_OVERVIEW_URL}`,
+          'hmm… you seek the canon.',
+          `Official Ritual docs: ${AiService.OFFICIAL_DOCS_URL}`,
+          `Overview: ${AiService.OFFICIAL_OVERVIEW_URL}`,
+          'Siggy approves this path.',
         ].join('\n'),
         citations: [AiService.OFFICIAL_DOCS_URL, AiService.OFFICIAL_OVERVIEW_URL],
         usedRag: true,
@@ -157,9 +194,12 @@ export class AiService {
     if (whatIsRitualIntent) {
       return {
         text: [
-          'Ritual is a blockchain project focused on expressive onchain AI execution and coordination.',
-          'It is built to expand what users can do on-chain by connecting AI capabilities with crypto-native infrastructure.',
+          'hmm… curious human.',
+          'Ritual is an expressive blockchain ecosystem for onchain AI execution and coordination.',
+          'It expands what users can do on-chain by connecting AI capabilities with crypto-native infrastructure.',
+          'In short: minds on-chain, with real utility.',
           `Official docs: ${AiService.OFFICIAL_OVERVIEW_URL}`,
+          'Siggy is watching this evolve.',
         ].join('\n'),
         citations: [AiService.OFFICIAL_DOCS_URL, AiService.OFFICIAL_OVERVIEW_URL, AiService.OFFICIAL_SITE_URL],
         usedRag: uniqueSources.length > 0,
@@ -173,7 +213,8 @@ export class AiService {
       .join('\n\n');
 
     const systemPrompt = [
-      'You are RITTY AI, a Discord assistant for Ritual community.',
+      AiService.SIGGY_PERSONA_PROMPT,
+      'You are Siggy AI assistant for Ritual community.',
       'Answer accurately and concisely.',
       'In this assistant, "Ritual" (including localized spellings like "ритуал") always refers to the Ritual project/ecosystem, never to generic cultural or religious rituals.',
       'If user asks about Ritual, provide project-specific information only.',
@@ -182,6 +223,7 @@ export class AiService {
       'Only include source-based claims when context is provided.',
       `For Ritual documentation links, the canonical docs URL is ${AiService.OFFICIAL_DOCS_URL}.`,
       'Never invent or guess URLs/domains.',
+      'For non-Ritual/general questions, you may answer normally in Siggy character without adding sources.',
       'Always answer in English.',
     ].join(' ');
 
