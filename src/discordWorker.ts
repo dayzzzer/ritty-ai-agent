@@ -69,10 +69,14 @@ async function startDiscordWithRetry(services: BotServices): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  logger.info('Discord worker booting');
   const services = new BotServices();
+  logger.info('Bot services initialized');
   await services.loadDocsIndex();
+  logger.info('Docs index loaded');
 
   scheduleDocsReindex(services);
+  logger.info('Docs cron scheduled');
   await startDiscordWithRetry(services);
 }
 

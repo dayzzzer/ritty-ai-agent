@@ -313,6 +313,7 @@ export async function registerSlashCommands(): Promise<void> {
 }
 
 export async function startDiscordBot(services: BotServices): Promise<Client> {
+  logger.info('Initializing Discord client');
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -482,7 +483,14 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
   });
 
   try {
+    logger.info('Starting Discord login');
+    const loginWatchdog = setTimeout(() => {
+      logger.error('Discord login is still pending after 60s');
+    }, 60_000);
+
     await client.login(appConfig.discord.token);
+    clearTimeout(loginWatchdog);
+    logger.info('Discord login resolved');
   } catch (error) {
     client.destroy();
     throw error;
