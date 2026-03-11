@@ -82,6 +82,7 @@ const GREETING_IGNORED_WORDS = new Set([
   'helo',
   'helloooo',
 ]);
+const RITTY_NAME_PATTERN = /\b(ritty|siggy|сигги|сиги|ритти)\b/iu;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -535,6 +536,12 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
         }
 
         await executePrefixCommand(message, command, args, services);
+        return;
+      }
+
+      const publicAction = detectRittyActionFromText(content);
+      if (publicAction && RITTY_NAME_PATTERN.test(content)) {
+        await replyWithActionVideo(message, publicAction);
         return;
       }
 
