@@ -5,6 +5,7 @@ import { BotServices } from './services/botServices.js';
 import { startDiscordBot } from './discordBot.js';
 import { ingestRitualDocs } from './ai/ingest.js';
 import { startWebServer } from './web/server.js';
+import { configureUndiciForRender } from './utils/networking.js';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -73,6 +74,7 @@ async function startDiscordWithRetry(services: BotServices): Promise<void> {
 async function main(): Promise<void> {
   setDefaultResultOrder('ipv4first');
   logger.info('DNS result order set to ipv4first');
+  configureUndiciForRender();
   const services = new BotServices();
   await services.loadDocsIndex();
 

@@ -1,3 +1,4 @@
+import path from 'node:path';
 import {
   type APIEmbed,
   ChannelType,
@@ -127,6 +128,40 @@ async function withDiscordRetry<T>(operationName: string, operation: () => Promi
   }
 }
 
+function getActionVideoUrl(action: RittyAction): string | null {
+  if (!appConfig.mediaBaseUrl) {
+    return null;
+  }
+
+  return `${appConfig.mediaBaseUrl}/media/action/${encodeURIComponent(action.id)}.mp4`;
+}
+
+function getWhatIsRitualImageUrl(): string | null {
+  if (!appConfig.mediaBaseUrl) {
+    return null;
+  }
+
+  return `${appConfig.mediaBaseUrl}/media/what-is-ritual.svg`;
+}
+
+function getAnswerImageUrlFallback(answer: { imagePath?: string; imageUrl?: string }): string | undefined {
+  if (answer.imageUrl) {
+    return answer.imageUrl;
+  }
+
+  const localImagePath = answer.imagePath;
+  if (!localImagePath) {
+    return undefined;
+  }
+
+  const fileName = path.basename(localImagePath).toLowerCase();
+  if (fileName === 'ritual-chain.svg') {
+    return getWhatIsRitualImageUrl() ?? undefined;
+  }
+
+  return undefined;
+}
+
 function normalizeForIntent(input: string): string {
   return input
     .toLowerCase()
@@ -175,16 +210,29 @@ async function replyWithGreetingVideo(message: Message): Promise<void> {
 }
 
 async function replyWithActionVideo(message: Message, action: RittyAction): Promise<void> {
-  const actionVideo = await buildFileAttachmentFromPath(action.videoPath);
-  await withDiscordRetry(`message.reply.actionVideo.${action.id}`, () =>
-    message.reply({
-      files: [{ attachment: actionVideo.buffer, name: actionVideo.name }],
-    }),
-  );
+  try {
+    const actionVideo = await buildFileAttachmentFromPath(action.videoPath);
+    await withDiscordRetry(`message.reply.actionVideo.${action.id}`, () =>
+      message.reply({
+        files: [{ attachment: actionVideo.buffer, name: actionVideo.name }],
+      }),
+    );
+    return;
+  } catch (error) {
+    logger.warn({ err: error, actionId: action.id }, 'Failed to attach action video, trying URL fallback');
+  }
+
+  const fallbackUrl = getActionVideoUrl(action);
+  if (!fallbackUrl) {
+    throw new Error(`Action video failed and no media URL fallback is configured for action "${action.id}"`);
+  }
+
+  await withDiscordRetry(`message.reply.actionVideoUrl.${action.id}`, () => message.reply(fallbackUrl));
 }
 
 async function replyWithAiAnswer(message: Message, services: BotServices, question: string): Promise<void> {
   const answer = await services.aiService.answerRitualQuestion(question, services.getDocsIndex());
+  const remoteImageUrl = getAnswerImageUrlFallback(answer);
   const sourcesValue = answer.citations.map((url, index) => `${index + 1}. ${url}`).join('\n');
   const trimmedDescription = answer.text.length > 3900 ? `${answer.text.slice(0, 3897)}...` : answer.text;
   const baseEmbed: APIEmbed = {
@@ -219,7 +267,6 @@ async function replyWithAiAnswer(message: Message, services: BotServices, questi
     }
   }
 
-  const remoteImageUrl = answer.imageUrl;
   if (remoteImageUrl) {
     await withDiscordRetry('message.reply.aiAnswer.remoteImage', () =>
       message.reply({
@@ -238,6 +285,7 @@ async function replyWithGreetingVideoAndAiAnswer(message: Message, services: Bot
     buildFileAttachmentFromPath(appConfig.web.idleVideoPath),
     services.aiService.answerRitualQuestion(question, services.getDocsIndex()),
   ]);
+  const remoteImageUrl = getAnswerImageUrlFallback(answer);
 
   const sourcesValue = answer.citations.map((url, index) => `${index + 1}. ${url}`).join('\n');
   const trimmedDescription = answer.text.length > 3900 ? `${answer.text.slice(0, 3897)}...` : answer.text;
@@ -273,8 +321,8 @@ async function replyWithGreetingVideoAndAiAnswer(message: Message, services: Bot
     }
   }
 
-  if (!imageEmbedUrl && answer.imageUrl) {
-    imageEmbedUrl = answer.imageUrl;
+  if (!imageEmbedUrl && remoteImageUrl) {
+    imageEmbedUrl = remoteImageUrl;
   }
 
   await withDiscordRetry('message.reply.greetingAndAnswer', () =>

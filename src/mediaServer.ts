@@ -6,6 +6,7 @@ import path from 'node:path';
 import { config as loadEnv } from 'dotenv';
 import { logger } from './logger.js';
 import { PfpService } from './services/pfpService.js';
+import { getRittyActionById } from './actions/rittyActions.js';
 
 loadEnv();
 
@@ -32,6 +33,7 @@ interface CachedArt {
 const pfpAssetsRoot = path.resolve(process.env.PFP_ASSETS_ROOT ?? './assets/characters');
 const mediaPublicBaseUrl = process.env.MEDIA_PUBLIC_BASE_URL;
 const artsApiUrl = process.env.ARTS_API_URL ?? 'https://ritualarts.xyz/api/arts';
+const whatIsRitualImagePath = path.resolve(process.env.WHAT_IS_RITUAL_IMAGE_PATH ?? './files by user/what is ritual/ritual-chain.svg');
 
 const pfpService = new PfpService(pfpAssetsRoot);
 const pfpCache = new Map<string, CachedPfp>();
@@ -175,6 +177,46 @@ const server = createServer(async (req, res) => {
           'cache-control': 'public, max-age=3600',
         },
         image,
+      );
+      return;
+    }
+
+    if ((method === 'GET' || method === 'HEAD') && pathname === '/media/what-is-ritual.svg') {
+      const image = await readFile(whatIsRitualImagePath);
+      writeBinaryResponse(
+        method,
+        res,
+        200,
+        {
+          'content-type': getMimeByPath(whatIsRitualImagePath),
+          'cache-control': 'public, max-age=3600',
+        },
+        image,
+      );
+      return;
+    }
+
+    if ((method === 'GET' || method === 'HEAD') && pathname.startsWith('/media/action/')) {
+      const rawActionId = decodeURIComponent(pathname.slice('/media/action/'.length));
+      const actionId = rawActionId.replace(/\.mp4$/i, '').trim();
+      const action = getRittyActionById(actionId);
+      if (!action) {
+        const out = jsonResponse({ error: 'Unknown action' }, 404);
+        res.writeHead(out.status, { 'content-type': out.contentType });
+        res.end(out.body);
+        return;
+      }
+
+      const video = await readFile(action.videoPath);
+      writeBinaryResponse(
+        method,
+        res,
+        200,
+        {
+          'content-type': 'video/mp4',
+          'cache-control': 'public, max-age=3600',
+        },
+        video,
       );
       return;
     }

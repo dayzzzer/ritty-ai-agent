@@ -1,8 +1,10 @@
+import path from 'node:path';
 import type { BotCommand } from './types.js';
 import { localize } from '../utils/language.js';
 import { buildFileAttachmentFromPath, buildImageAttachmentFromPath } from '../utils/imageAttachment.js';
 import { logger } from '../logger.js';
 import { detectRittyActionFromText } from '../actions/rittyActions.js';
+import { appConfig } from '../config.js';
 
 export const askRittyCommand: BotCommand = {
   name: 'askritty',
@@ -39,6 +41,12 @@ export const askRittyCommand: BotCommand = {
         return;
       } catch (error) {
         logger.warn({ err: error, actionId: requestedAction.id }, 'Failed to attach askRitty action video');
+        if (appConfig.mediaBaseUrl) {
+          await ctx.reply({
+            content: `${appConfig.mediaBaseUrl}/media/action/${encodeURIComponent(requestedAction.id)}.mp4`,
+          });
+          return;
+        }
       }
     }
 
@@ -56,6 +64,11 @@ export const askRittyCommand: BotCommand = {
 
     const files = [];
     let attachedImageName: string | null = null;
+    const fallbackImageUrl =
+      answer.imageUrl ??
+      (answer.imagePath && path.basename(answer.imagePath).toLowerCase() === 'ritual-chain.svg' && appConfig.mediaBaseUrl
+        ? `${appConfig.mediaBaseUrl}/media/what-is-ritual.svg`
+        : undefined);
     if (answer.imagePath) {
       try {
         const image = await buildImageAttachmentFromPath(answer.imagePath);
@@ -77,8 +90,8 @@ export const askRittyCommand: BotCommand = {
           fields,
           image: attachedImageName
             ? { url: `attachment://${attachedImageName}` }
-            : answer.imageUrl
-              ? { url: answer.imageUrl }
+            : fallbackImageUrl
+              ? { url: fallbackImageUrl }
               : undefined,
           footer: {
             text: answer.usedRag
