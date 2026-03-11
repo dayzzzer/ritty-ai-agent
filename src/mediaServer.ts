@@ -34,6 +34,8 @@ const pfpAssetsRoot = path.resolve(process.env.PFP_ASSETS_ROOT ?? './assets/char
 const mediaPublicBaseUrl = process.env.MEDIA_PUBLIC_BASE_URL;
 const artsApiUrl = process.env.ARTS_API_URL ?? 'https://ritualarts.xyz/api/arts';
 const whatIsRitualImagePath = path.resolve(process.env.WHAT_IS_RITUAL_IMAGE_PATH ?? './files by user/what is ritual/ritual-chain.svg');
+const idleVideoPath = path.resolve(process.env.WEB_IDLE_VIDEO_PATH ?? './files by user/HI/IMG_9732.MP4');
+const reactionVideoPath = path.resolve(process.env.WEB_REACTION_VIDEO_PATH ?? './files by user/HI/REACTION.mp4');
 
 const pfpService = new PfpService(pfpAssetsRoot);
 const pfpCache = new Map<string, CachedPfp>();
@@ -208,6 +210,36 @@ const server = createServer(async (req, res) => {
       }
 
       const video = await readFile(action.videoPath);
+      writeBinaryResponse(
+        method,
+        res,
+        200,
+        {
+          'content-type': 'video/mp4',
+          'cache-control': 'public, max-age=3600',
+        },
+        video,
+      );
+      return;
+    }
+
+    if ((method === 'GET' || method === 'HEAD') && pathname === '/media/idle.mp4') {
+      const video = await readFile(idleVideoPath);
+      writeBinaryResponse(
+        method,
+        res,
+        200,
+        {
+          'content-type': 'video/mp4',
+          'cache-control': 'public, max-age=3600',
+        },
+        video,
+      );
+      return;
+    }
+
+    if ((method === 'GET' || method === 'HEAD') && pathname === '/media/reaction.mp4') {
+      const video = await readFile(reactionVideoPath);
       writeBinaryResponse(
         method,
         res,

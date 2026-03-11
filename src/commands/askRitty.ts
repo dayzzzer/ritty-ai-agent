@@ -33,6 +33,13 @@ export const askRittyCommand: BotCommand = {
 
     const requestedAction = detectRittyActionFromText(question);
     if (requestedAction) {
+      if (appConfig.mediaBaseUrl) {
+        await ctx.reply({
+          content: `${appConfig.mediaBaseUrl}/media/action/${encodeURIComponent(requestedAction.id)}.mp4`,
+        });
+        return;
+      }
+
       try {
         const video = await buildFileAttachmentFromPath(requestedAction.videoPath);
         await ctx.reply({
@@ -62,14 +69,15 @@ export const askRittyCommand: BotCommand = {
           ]
         : [];
 
-    const files = [];
-    let attachedImageName: string | null = null;
     const fallbackImageUrl =
       answer.imageUrl ??
       (answer.imagePath && path.basename(answer.imagePath).toLowerCase() === 'ritual-chain.svg' && appConfig.mediaBaseUrl
         ? `${appConfig.mediaBaseUrl}/media/what-is-ritual.svg`
         : undefined);
-    if (answer.imagePath) {
+    const files: Array<{ attachment: Buffer; name: string }> = [];
+    let attachedImageName: string | null = null;
+
+    if (!fallbackImageUrl && answer.imagePath) {
       try {
         const image = await buildImageAttachmentFromPath(answer.imagePath);
         attachedImageName = image.name;
@@ -100,7 +108,7 @@ export const askRittyCommand: BotCommand = {
           },
         },
       ],
-      files,
+      files: files.length > 0 ? files : undefined,
     });
   },
 };

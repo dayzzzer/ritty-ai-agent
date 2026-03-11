@@ -136,6 +136,14 @@ function getActionVideoUrl(action: RittyAction): string | null {
   return `${appConfig.mediaBaseUrl}/media/action/${encodeURIComponent(action.id)}.mp4`;
 }
 
+function getIdleVideoUrl(): string | null {
+  if (!appConfig.mediaBaseUrl) {
+    return null;
+  }
+
+  return `${appConfig.mediaBaseUrl}/media/idle.mp4`;
+}
+
 function getWhatIsRitualImageUrl(): string | null {
   if (!appConfig.mediaBaseUrl) {
     return null;
@@ -201,6 +209,12 @@ function stripGreetingTokens(input: string): string {
 }
 
 async function replyWithGreetingVideo(message: Message): Promise<void> {
+  const remoteVideoUrl = getIdleVideoUrl();
+  if (remoteVideoUrl) {
+    await withDiscordRetry('message.reply.greetingVideoUrl', () => message.reply(remoteVideoUrl));
+    return;
+  }
+
   const greetingVideo = await buildFileAttachmentFromPath(appConfig.web.idleVideoPath);
   await withDiscordRetry('message.reply.greetingVideo', () =>
     message.reply({
@@ -210,6 +224,12 @@ async function replyWithGreetingVideo(message: Message): Promise<void> {
 }
 
 async function replyWithActionVideo(message: Message, action: RittyAction): Promise<void> {
+  const fallbackUrl = getActionVideoUrl(action);
+  if (fallbackUrl) {
+    await withDiscordRetry(`message.reply.actionVideoUrl.${action.id}`, () => message.reply(fallbackUrl));
+    return;
+  }
+
   try {
     const actionVideo = await buildFileAttachmentFromPath(action.videoPath);
     await withDiscordRetry(`message.reply.actionVideo.${action.id}`, () =>
@@ -221,13 +241,7 @@ async function replyWithActionVideo(message: Message, action: RittyAction): Prom
   } catch (error) {
     logger.warn({ err: error, actionId: action.id }, 'Failed to attach action video, trying URL fallback');
   }
-
-  const fallbackUrl = getActionVideoUrl(action);
-  if (!fallbackUrl) {
-    throw new Error(`Action video failed and no media URL fallback is configured for action "${action.id}"`);
-  }
-
-  await withDiscordRetry(`message.reply.actionVideoUrl.${action.id}`, () => message.reply(fallbackUrl));
+  throw new Error(`Action video failed and no media URL fallback is configured for action "${action.id}"`);
 }
 
 async function replyWithAiAnswer(message: Message, services: BotServices, question: string): Promise<void> {
@@ -252,6 +266,15 @@ async function replyWithAiAnswer(message: Message, services: BotServices, questi
     },
   };
 
+  if (remoteImageUrl) {
+    await withDiscordRetry('message.reply.aiAnswer.remoteImage', () =>
+      message.reply({
+        embeds: [{ ...baseEmbed, image: { url: remoteImageUrl } }],
+      }),
+    );
+    return;
+  }
+
   if (answer.imagePath) {
     try {
       const image = await buildImageAttachmentFromPath(answer.imagePath);
@@ -267,25 +290,14 @@ async function replyWithAiAnswer(message: Message, services: BotServices, questi
     }
   }
 
-  if (remoteImageUrl) {
-    await withDiscordRetry('message.reply.aiAnswer.remoteImage', () =>
-      message.reply({
-        embeds: [{ ...baseEmbed, image: { url: remoteImageUrl } }],
-      }),
-    );
-    return;
-  }
-
   const citations = answer.citations.length > 0 ? `\n\nSources:\n${answer.citations.join('\n')}` : '';
   await withDiscordRetry('message.reply.aiAnswer.textOnly', () => message.reply(`${answer.text}${citations}`.slice(0, 1900)));
 }
 
 async function replyWithGreetingVideoAndAiAnswer(message: Message, services: BotServices, question: string): Promise<void> {
-  const [greetingVideo, answer] = await Promise.all([
-    buildFileAttachmentFromPath(appConfig.web.idleVideoPath),
-    services.aiService.answerRitualQuestion(question, services.getDocsIndex()),
-  ]);
+  const answer = await services.aiService.answerRitualQuestion(question, services.getDocsIndex());
   const remoteImageUrl = getAnswerImageUrlFallback(answer);
+  const remoteGreetingVideoUrl = getIdleVideoUrl();
 
   const sourcesValue = answer.citations.map((url, index) => `${index + 1}. ${url}`).join('\n');
   const trimmedDescription = answer.text.length > 3900 ? `${answer.text.slice(0, 3897)}...` : answer.text;
@@ -306,12 +318,14 @@ async function replyWithGreetingVideoAndAiAnswer(message: Message, services: Bot
     },
   };
 
-  const files: Array<{ attachment: Buffer; name: string }> = [
-    { attachment: greetingVideo.buffer, name: greetingVideo.name },
-  ];
+  const files: Array<{ attachment: Buffer; name: string }> = [];
 
   let imageEmbedUrl: string | undefined;
-  if (answer.imagePath) {
+  if (remoteImageUrl) {
+    imageEmbedUrl = remoteImageUrl;
+  }
+
+  if (!imageEmbedUrl && answer.imagePath) {
     try {
       const image = await buildImageAttachmentFromPath(answer.imagePath);
       files.push({ attachment: image.buffer, name: image.name });
@@ -321,14 +335,20 @@ async function replyWithGreetingVideoAndAiAnswer(message: Message, services: Bot
     }
   }
 
-  if (!imageEmbedUrl && remoteImageUrl) {
-    imageEmbedUrl = remoteImageUrl;
+  if (!remoteGreetingVideoUrl) {
+    try {
+      const greetingVideo = await buildFileAttachmentFromPath(appConfig.web.idleVideoPath);
+      files.push({ attachment: greetingVideo.buffer, name: greetingVideo.name });
+    } catch (error) {
+      logger.warn({ err: error }, 'Failed to attach greeting video in combined greeting+answer reply');
+    }
   }
 
   await withDiscordRetry('message.reply.greetingAndAnswer', () =>
     message.reply({
+      content: remoteGreetingVideoUrl ?? undefined,
       embeds: [{ ...embed, image: imageEmbedUrl ? { url: imageEmbedUrl } : undefined }],
-      files,
+      files: files.length > 0 ? files : undefined,
     }),
   );
 }
@@ -387,7 +407,7 @@ async function executeSlashCommand(
   const shouldDefer = command.deferReply ?? true;
 
   if (shouldDefer && !interaction.deferred && !interaction.replied) {
-    await interaction.deferReply();
+    await withDiscordRetry('interaction.deferReply', () => interaction.deferReply());
   }
 
   const ctx = {
@@ -481,6 +501,7 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
 
   const aiCooldown = new Map<string, number>();
   const handledMessageIds = new Map<string, number>();
+  const handledInteractionIds = new Map<string, number>();
 
   client.once(Events.ClientReady, (readyClient) => {
     logger.info({ user: readyClient.user.tag }, 'RITTY AI is online');
@@ -500,6 +521,20 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
 
   client.on(Events.InteractionCreate, async (interaction) => {
     try {
+      const now = Date.now();
+      if (handledInteractionIds.has(interaction.id)) {
+        return;
+      }
+      handledInteractionIds.set(interaction.id, now);
+      if (handledInteractionIds.size > 2000) {
+        const expiration = now - 10 * 60 * 1000;
+        for (const [id, ts] of handledInteractionIds) {
+          if (ts < expiration) {
+            handledInteractionIds.delete(id);
+          }
+        }
+      }
+
       if (interaction.isButton()) {
         const duelHandled = await handleDuelButtonInteraction(interaction, services);
         if (duelHandled) {
@@ -518,10 +553,16 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
 
       const command = resolveCommand(interaction.commandName);
       if (!command) {
-        await interaction.reply({ content: 'Unknown command.', ephemeral: true });
+        await withDiscordRetry('interaction.reply.unknownCommand', () =>
+          interaction.reply({ content: 'Unknown command.', ephemeral: true }),
+        );
         return;
       }
 
+      logger.info(
+        { interactionId: interaction.id, command: interaction.commandName, userId: interaction.user.id, channelId: interaction.channelId },
+        'Handling slash command',
+      );
       await executeSlashCommand(interaction, command, services);
     } catch (error) {
       if (error instanceof DiscordAPIError && (error.code === 10062 || error.code === 40060)) {
@@ -533,11 +574,17 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
       if (interaction.isRepliable()) {
         try {
           if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'Something went wrong. Please try again.', flags: MessageFlags.Ephemeral });
+            await withDiscordRetry('interaction.reply.errorNoAck', () =>
+              interaction.reply({ content: 'Something went wrong. Please try again.', flags: MessageFlags.Ephemeral }),
+            );
           } else if (interaction.deferred && !interaction.replied) {
-            await interaction.editReply({ content: 'Something went wrong. Please try again.' });
+            await withDiscordRetry('interaction.editReply.errorAfterDefer', () =>
+              interaction.editReply({ content: 'Something went wrong. Please try again.' }),
+            );
           } else {
-            await interaction.followUp({ content: 'Something went wrong. Please try again.', flags: MessageFlags.Ephemeral });
+            await withDiscordRetry('interaction.followUp.errorAfterReply', () =>
+              interaction.followUp({ content: 'Something went wrong. Please try again.', flags: MessageFlags.Ephemeral }),
+            );
           }
         } catch (replyError) {
           logger.warn({ err: replyError }, 'Failed to send interaction error response');
@@ -571,6 +618,10 @@ export async function startDiscordBot(services: BotServices): Promise<Client> {
       }
 
       const content = message.content.trim();
+      logger.info(
+        { messageId: message.id, userId: message.author.id, channelId: message.channelId, hasMention: client.user ? message.mentions.has(client.user.id) : false },
+        'Handling message create event',
+      );
       if (content.startsWith(appConfig.discord.prefix)) {
         const withoutPrefix = content.slice(appConfig.discord.prefix.length).trim();
         if (!withoutPrefix) {
