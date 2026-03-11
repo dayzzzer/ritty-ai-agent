@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RITTY AI | COMMAND CENTER</title>
+    <link rel="icon" type="image/webp" href="/app/ritual-favicon.webp" />
+    <link rel="shortcut icon" type="image/webp" href="/app/ritual-favicon.webp" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+      @import url('https://api.fontshare.com/v2/css?f[]=clash-display@400,600&f[]=satoshi@400,700&display=swap');
+
+      :root {
+        --accent: #22c55e;
+        --accent-glow: rgba(34, 197, 94, 0.45);
+        --bg-deep: #02040a;
+      }
+
+      body {
+        margin: 0;
+        background-color: var(--bg-deep);
+        color: #e2e8f0;
+        font-family: 'Space Grotesk', sans-serif;
+        overflow: hidden;
+      }
+      body.modal-open {
+        overflow: hidden;
+      }
+
+      .scanlines {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          rgba(18, 16, 16, 0) 50%,
+          rgba(0, 0, 0, 0.1) 50%
+        );
+        background-size: 100% 4px;
+        z-index: 50;
+        pointer-events: none;
+        opacity: 0.3;
+      }
+
+      .glass-panel {
+        background: rgba(13, 17, 23, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+      }
+
+      .hud-corners-all {
+        background-repeat: no-repeat;
+        background-image:
+          linear-gradient(var(--accent), var(--accent)),
+          linear-gradient(var(--accent), var(--accent)),
+          linear-gradient(var(--accent), var(--accent)),
+          linear-gradient(var(--accent), var(--accent)),
+          linear-gradient(var(--accent), var(--accent)),
+          linear-gradient(var(--accent), var(--accent)),
+          linear-gradient(var(--accent), var(--accent)),
+          linear-gradient(var(--accent), var(--accent));
+        background-size:
+          15px 2px, 2px 15px,
+          15px 2px, 2px 15px,
+          15px 2px, 2px 15px,
+          15px 2px, 2px 15px;
+        background-position:
+          top left, top left,
+          top right, top right,
+          bottom left, bottom left,
+          bottom right, bottom right;
+      }
+
+      .hud-corners-right {
+        background-repeat: no-repeat;
+        background-image:
+          linear-gradient(var(--accent), var(--accent)),
+          linear-gradient(var(--accent), var(--accent)),
+          linear-gradient(var(--accent), var(--accent)),
+          linear-gradient(var(--accent), var(--accent));
+        background-size: 15px 2px, 2px 15px, 15px 2px, 2px 15px;
+        background-position: top right, top right, bottom right, bottom right;
+      }
+
+      .glow-text {
+        text-shadow: 0 0 10px var(--accent-glow);
+      }
+
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: var(--accent);
+        border-radius: 10px;
+      }
+
+      @keyframes pulse-soft {
+        0%, 100% { opacity: 0.8; }
+        50% { opacity: 0.4; }
+      }
+      .animate-pulse-soft { animation: pulse-soft 3s infinite ease-in-out; }
+
+      #chatLog article {
+        animation: slideIn 0.3s ease-out forwards;
+      }
+      @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+      .top-marquee {
+        position: relative;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      .top-marquee-track {
+        display: flex;
+        width: max-content;
+        gap: 0;
+        will-change: transform;
+        animation: top-marquee-move 16s linear infinite;
+      }
+      .top-marquee-group {
+        display: inline-flex;
+        gap: 3rem;
+        flex-shrink: 0;
+        padding-right: 3rem;
+      }
+      .top-marquee-item {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(74, 222, 128, 0.8);
+      }
+      @keyframes top-marquee-move {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+      }
+    </style>
+  </head>
+  <body class="h-screen overflow-hidden bg-[#02040a]">
+    <div class="scanlines"></div>
+    
+    <!-- Background Ambience -->
+    <div class="fixed inset-0 z-0 overflow-hidden">
+      <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-emerald-900/10 rounded-full blur-[120px] animate-pulse-soft"></div>
+      <div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-green-900/10 rounded-full blur-[120px] animate-pulse-soft"></div>
+    </div>
+
+    <div class="relative z-10 flex flex-col h-screen p-4 gap-4">
+      <!-- Top Header HUD -->
+      <header class="flex items-center gap-5 px-6 py-3 glass-panel rounded-xl border-emerald-500/20">
+        <div class="flex items-center gap-4">
+          <div class="w-3 h-3 bg-emerald-400 rounded-full shadow-[0_0_8px_var(--accent-glow)] animate-pulse"></div>
+          <h1 class="font-['Clash_Display'] text-xl font-semibold tracking-widest glow-text text-emerald-400">RITTY_AI v1.0</h1>
+        </div>
+        <div class="hidden md:block flex-1 min-w-0 top-marquee">
+          <div class="top-marquee-track">
+            <div class="top-marquee-group">
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+            </div>
+            <div class="top-marquee-group" aria-hidden="true">
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+              <span class="top-marquee-item">RITTY AI</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Grid -->
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-[minmax(280px,calc((100vh-170px)*11/20))_minmax(0,1fr)] gap-4 min-h-0">
+        
+        <!-- Visual Observation Panel -->
+        <aside class="min-h-0 flex items-stretch">
+          <div class="glass-panel rounded-2xl overflow-hidden relative hud-corners-all group h-[58vh] sm:h-[65vh] lg:h-full aspect-[11/20] w-auto max-w-full" id="visualPanel">
+            <!-- HUD Overlays -->
+            <div class="absolute top-4 left-4 z-20 flex flex-col gap-1">
+              <div class="bg-black/60 px-2 py-1 rounded text-[10px] font-mono text-emerald-400 border border-emerald-500/30 backdrop-blur-md">
+                LIVE_FEED: SIGGY_01
+              </div>
+              <div class="bg-black/40 px-2 py-0.5 rounded text-[8px] font-mono text-white/50">
+                32.8441° N, 117.1517° W
+              </div>
+            </div>
+
+            <div class="absolute bottom-4 right-4 z-20">
+              <div class="flex flex-col items-end gap-1">
+                <div class="flex gap-1">
+                  <div class="w-1 h-3 bg-emerald-400"></div>
+                  <div class="w-1 h-3 bg-emerald-400/60"></div>
+                  <div class="w-1 h-3 bg-emerald-400/30"></div>
+                </div>
+                <span class="text-[8px] font-mono text-emerald-400 uppercase">Synch_Rate: 98%</span>
+              </div>
+            </div>
+
+            <!-- Video Stack -->
+            <div class="w-full h-full relative bg-white/90">
+              <video id="idleVideoBg" class="absolute inset-0 w-full h-full object-cover object-center scale-110 blur-[20px] opacity-45" autoplay muted loop playsinline aria-hidden="true">
+                <source src="/media/idle.mp4" type="video/mp4" />
+              </video>
+              <video id="reactionVideoBg" class="absolute inset-0 w-full h-full object-cover object-center scale-110 blur-[20px] opacity-45 hidden" muted playsinline preload="auto" aria-hidden="true">
+                <source src="/media/reaction.mp4" type="video/mp4" />
+              </video>
+              <div class="absolute inset-0 bg-white/20 mix-blend-soft-light pointer-events-none"></div>
+              <video id="idleVideo" class="absolute inset-0 w-full h-full object-contain object-center z-10" autoplay muted loop playsinline>
+                <source src="/media/idle.mp4" type="video/mp4" />
+              </video>
+              <video id="reactionVideo" class="absolute inset-0 w-full h-full object-contain object-center z-10 hidden" muted playsinline preload="auto">
+                <source src="/media/reaction.mp4" type="video/mp4" />
+              </video>
+              <div class="reaction-overlay absolute inset-0 hidden pointer-events-none bg-emerald-400/20 mix-blend-overlay z-20" id="reactionOverlay"></div>
+            </div>
+          </div>
+
+        </aside>
+
+        <!-- Chat Terminal Panel -->
+        <main class="flex flex-col glass-panel rounded-2xl overflow-hidden hud-corners-right border-emerald-500/10 min-h-0">
+          <!-- Command Toolbars -->
+          <section class="px-4 py-3 border-b border-white/5 flex flex-wrap gap-2" id="commandRow">
+            <button data-command="/askritty What is Ritual?" id="cmd-ask" class="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/20 hover:border-emerald-400 hover:bg-emerald-500/10 transition-all text-xs font-mono text-emerald-400">
+              <iconify-icon icon="lucide:terminal" class="group-hover:animate-pulse"></iconify-icon>
+              /askritty
+            </button>
+            <button data-command="/artritual" id="cmd-art" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-xs font-mono text-white/70">
+              <iconify-icon icon="lucide:palette"></iconify-icon>
+              /artritual
+            </button>
+            <button data-command="/ritualpfp" id="cmd-pfp" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-xs font-mono text-white/70">
+              <iconify-icon icon="lucide:sparkles"></iconify-icon>
+              /ritualpfp
+            </button>
+            <button data-command="/team" id="cmd-team" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-xs font-mono text-white/70">
+              <iconify-icon icon="lucide:users-2"></iconify-icon>
+              /team
+            </button>
+            <button data-command="/ritualrandom" id="cmd-rand" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-xs font-mono text-white/70">
+              <iconify-icon icon="lucide:shuffle"></iconify-icon>
+              /ritualrandom
+            </button>
+            <button data-command="/ritualtest" id="cmd-test" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-xs font-mono text-white/70">
+              <iconify-icon icon="lucide:graduation-cap"></iconify-icon>
+              /ritualtest
+            </button>
+            <button data-command="/actions" id="cmd-actions" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-xs font-mono text-white/70">
+              <iconify-icon icon="lucide:list-checks"></iconify-icon>
+              /actions
+            </button>
+          </section>
+
+          <!-- Chat Message Feed -->
+          <section class="flex-1 overflow-y-auto p-6 flex flex-col gap-6 custom-scrollbar" id="chatLog" aria-live="polite">
+            <!-- Messages will be injected here via app.js -->
+          </section>
+
+          <!-- Input System -->
+          <div class="p-4 bg-black/40 border-t border-white/5">
+            <form id="chatForm" class="flex items-end gap-3 glass-panel p-2 rounded-xl border-emerald-500/20 focus-within:border-emerald-400/50 transition-colors">
+              <div class="flex-1 min-w-0">
+                <textarea id="chatInput" 
+                  class="w-full bg-transparent border-none focus:ring-0 text-sm py-2 px-3 text-emerald-50 resize-none min-h-[44px] max-h-[120px] custom-scrollbar placeholder:text-emerald-500/30"
+                  placeholder="INITIATE COMMAND SEQUENCE..."
+                  rows="1"></textarea>
+              </div>
+              <button type="submit" id="sendBtn" 
+                class="flex items-center justify-center w-11 h-11 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)] group">
+                <iconify-icon icon="lucide:send" class="text-xl group-hover:scale-110 group-active:scale-95 transition-transform"></iconify-icon>
+              </button>
+            </form>
+            <div class="mt-2 px-1 flex justify-between items-center">
+              <span class="text-[8px] font-mono text-emerald-400/40 uppercase">Encrypted Peer-to-Peer Tunnel Active</span>
+              <span class="text-[8px] font-mono text-emerald-400/40 uppercase">Tokens: 1,402 Available</span>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- System JS Bridge (Inject original app.js logic) -->
+    <script src="/app/app.js" type="module"></script>
+    <script>
+      // Simple auto-resize for textarea
+      const textarea = document.getElementById('chatInput');
+      textarea.addEventListener('input', () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+      });
+    </script>
+    <style>
+      /* Overriding some standard message styles to fit the command center theme */
+      .msg {
+        max-width: 85%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        font-family: 'Space Grotesk', sans-serif;
+      }
+      .msg.user {
+        align-self: flex-end;
+        background: rgba(34, 197, 94, 0.12);
+        border: 1px solid rgba(34, 197, 94, 0.35);
+        color: #fff;
+      }
+      .msg.bot {
+        align-self: flex-start;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+      }
+      .msg.typing-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        max-width: fit-content;
+      }
+      .typing-label {
+        color: #9ca3af;
+        font-size: 0.85rem;
+      }
+      .typing-dots {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .typing-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #86efac;
+        opacity: 0.35;
+        animation: typing-dot-bounce 1.1s infinite ease-in-out;
+      }
+      .typing-dot:nth-child(2) {
+        animation-delay: 0.16s;
+      }
+      .typing-dot:nth-child(3) {
+        animation-delay: 0.32s;
+      }
+      @keyframes typing-dot-bounce {
+        0%, 80%, 100% {
+          transform: translateY(0);
+          opacity: 0.35;
+        }
+        40% {
+          transform: translateY(-4px);
+          opacity: 1;
+        }
+      }
+      .message-text {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .message-image {
+        display: block;
+        margin-top: 12px;
+        width: min(100%, 360px);
+        max-height: 45vh;
+        object-fit: contain;
+        border-radius: 10px;
+        border: 1px solid rgba(34, 197, 94, 0.28);
+        background: rgba(2, 6, 23, 0.45);
+        cursor: zoom-in;
+      }
+      .message-image-link {
+        display: inline-block;
+        text-decoration: none;
+      }
+      .image-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 120;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: rgba(2, 6, 23, 0.8);
+        backdrop-filter: blur(8px);
+      }
+      .image-modal.hidden {
+        display: none;
+      }
+      .image-modal-content {
+        position: relative;
+        max-width: min(92vw, 1280px);
+        max-height: 88vh;
+      }
+      .image-modal-image {
+        display: block;
+        width: auto;
+        height: auto;
+        max-width: 92vw;
+        max-height: 88vh;
+        object-fit: contain;
+        border-radius: 14px;
+        border: 1px solid rgba(34, 197, 94, 0.45);
+        background: rgba(2, 6, 23, 0.92);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+      }
+      .image-modal-close {
+        position: absolute;
+        top: -14px;
+        right: -14px;
+        width: 34px;
+        height: 34px;
+        border-radius: 9999px;
+        border: 1px solid rgba(34, 197, 94, 0.45);
+        background: rgba(2, 6, 23, 0.95);
+        color: #86efac;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .msg a,
+      .sources a {
+        color: #86efac;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        word-break: break-all;
+      }
+      .msg .message-image-link,
+      .msg .message-image-link:hover {
+        text-decoration: none;
+        color: inherit;
+        word-break: normal;
+      }
+      .sources {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: #4ade80;
+        margin-top: 12px;
+        padding-top: 8px;
+        border-top: 1px dashed rgba(34, 197, 94, 0.28);
+      }
+      .quiz-options button {
+        background: rgba(34, 197, 94, 0.12) !important;
+        border: 1px solid rgba(34, 197, 94, 0.35) !important;
+        color: #4ade80 !important;
+        transition: all 0.2s;
+      }
+      .quiz-options button:hover {
+        background: rgba(34, 197, 94, 0.2) !important;
+        border-color: #4ade80 !important;
+      }
+    </style>
+  </body>
+</html>

@@ -4,5 +4,5 @@ dist
 storage/*.json
 *.log
 .DS_Store
-public
+/public
 .vercel
