@@ -59,13 +59,13 @@ const env = parsed.data;
 
 export const appConfig = {
   discord: {
-    token: env.DISCORD_TOKEN,
-    clientId: env.DISCORD_CLIENT_ID,
-    guildId: env.DISCORD_GUILD_ID,
+    token: env.DISCORD_TOKEN.trim(),
+    clientId: env.DISCORD_CLIENT_ID.trim(),
+    guildId: env.DISCORD_GUILD_ID?.trim(),
     prefix: env.PREFIX_COMMAND_TOKEN,
   },
   openai: {
-    apiKey: env.OPENAI_API_KEY,
+    apiKey: env.OPENAI_API_KEY.trim(),
     model: env.OPENAI_MODEL,
     embeddingModel: env.OPENAI_EMBEDDING_MODEL,
   },

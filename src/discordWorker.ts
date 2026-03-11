@@ -9,6 +9,29 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function logDiscordTokenStatusOnce(): Promise<void> {
+  try {
+    const response = await fetch('https://discord.com/api/v10/users/@me', {
+      headers: {
+        Authorization: `Bot ${appConfig.discord.token}`,
+      },
+    });
+
+    if (response.status === 200) {
+      const payload = (await response.json()) as { id?: string; username?: string };
+      logger.info(
+        { status: response.status, botId: payload.id, botUsername: payload.username },
+        'Discord token preflight check succeeded',
+      );
+      return;
+    }
+
+    logger.error({ status: response.status }, 'Discord token preflight check failed');
+  } catch (error) {
+    logger.error({ err: error }, 'Discord token preflight request failed');
+  }
+}
+
 function scheduleDocsReindex(services: BotServices): void {
   if (!appConfig.docsCron.enabled) {
     return;
@@ -73,6 +96,7 @@ async function main(): Promise<void> {
   setDefaultResultOrder('ipv4first');
   logger.info('DNS result order set to ipv4first');
   logger.info('Discord worker booting');
+  await logDiscordTokenStatusOnce();
   const services = new BotServices();
   logger.info('Bot services initialized');
   await services.loadDocsIndex();
